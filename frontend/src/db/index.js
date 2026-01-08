@@ -25,7 +25,7 @@ export class EdgeClassDB extends Dexie {
 }
 
 // Initialize database
-export const db = new GhostClassDB();
+export const db = new EdgeClassDB();
 
 // Generate device ID (persists across sessions)
 export const getDeviceId = () => {
