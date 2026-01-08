@@ -49,7 +49,7 @@ const Layout = ({ children }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2">
-              <span className="text-3xl">👻</span>
+              <span className="text-3xl">�</span>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Edge Class</h1>
                 <p className="text-xs text-gray-500">Offline-First Education</p>

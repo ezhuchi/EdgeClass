@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# GhostClass Quick Start Script
+# Edge Class Quick Start Script
 # Run this to start the application
 
 echo "
 ╔════════════════════════════════════════╗
-║     GhostClass Quick Start         ║
+║     Edge Class Quick Start         ║
 ╚════════════════════════════════════════╝
 "
 
@@ -53,7 +53,7 @@ if lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null 2>&1; then
 fi
 
 echo ""
-echo "Starting GhostClass..."
+echo "Starting Edge Class..."
 echo ""
 
 # Start Docker Compose

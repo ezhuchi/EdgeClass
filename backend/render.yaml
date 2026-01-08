@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ghostclass-backend
+    name: edgeclass-backend
     env: node
     plan: free
     buildCommand: npm install
@@ -11,6 +11,6 @@ services:
       - key: PORT
         value: 3000
     disk:
-      name: ghostclass-data
+      name: edgeclass-data
       mountPath: /app/data
       sizeGB: 1

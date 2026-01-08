@@ -5,41 +5,42 @@ import './index.css';
 import { migrateSyncQueueEndpoints } from './utils/migrateSyncQueue.js'; // Migration utility
 
 // Migrate old sync queue endpoints on app load
-migrateSyncQueueEndpoints().catch(console.error);
-
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('✅ Service Worker registered:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('❌ Service Worker registration failed:', error);
-      });
-  });
-}
+console.log('🔄 [STARTUP] Migrating sync queue endpoints...');
+migrateSyncQueueEndpoints()
+  .then(() => console.log('✅ [STARTUP] Sync queue migration complete'))
+  .catch(err => console.error('❌ [STARTUP] Migration failed:', err));
 
 // Log online/offline status
 window.addEventListener('online', () => {
-  console.log('🟢 Network: Online');
+  console.log('🟢 [NETWORK] Status changed: ONLINE');
 });
 
 window.addEventListener('offline', () => {
-  console.log('🔴 Network: Offline');
+  console.log('🔴 [NETWORK] Status changed: OFFLINE');
 });
 
-// Log app startup
+// Detailed app startup logging
+const startupInfo = {
+  mode: import.meta.env.MODE,
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  online: navigator.onLine,
+  userAgent: navigator.userAgent,
+  location: window.location.href,
+  timestamp: new Date().toISOString()
+};
+
 console.log(`
 ╔════════════════════════════════════════╗
-║      👻 GhostClass - Client Ready     ║
+║      🌾 Edge Class - Client Ready     ║
 ╠════════════════════════════════════════╣
-║   Mode: ${import.meta.env.MODE}                    ║
-║   PWA:  ${('serviceWorker' in navigator) ? 'Supported ✅' : 'Not Supported ❌'}        ║
-║   Network: ${navigator.onLine ? 'Online 🟢' : 'Offline 🔴'}             ║
+║   Mode: ${import.meta.env.MODE.padEnd(27)}║
+║   API: ${(import.meta.env.VITE_API_URL || 'http://localhost:3000').substring(0, 28).padEnd(28)}║
+║   Network: ${navigator.onLine ? 'Online 🟢' : 'Offline 🔴'}                  ║
+║   Route: ${window.location.pathname.padEnd(28)}║
 ╚════════════════════════════════════════╝
 `);
+
+console.log('📊 [STARTUP] Full configuration:', startupInfo);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

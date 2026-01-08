@@ -1,6 +1,6 @@
 {
-  "name": "GhostClass",
-  "short_name": "GhostClass",
+  "name": "Edge Class",
+  "short_name": "Edge Class",
   "description": "Offline-first education platform - Teach even when the internet ghosts you",
   "start_url": "/",
   "scope": "/",
@@ -11,15 +11,9 @@
   "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/ghost.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

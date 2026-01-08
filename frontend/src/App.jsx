@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from './db';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
@@ -33,6 +33,7 @@ function RouteLogger() {
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
+  console.log('🔒 [AUTH] Protected route check:', { hasUser: !!user, user: user?.username });
   return user ? children : <Navigate to="/login" replace />;
 };
 
@@ -72,6 +73,8 @@ const RoleDashboard = () => {
 };
 
 function App() {
+  console.log('🚀 [APP] Initializing Edge Class application');
+  
   return (
     <ErrorBoundary>
       <ThemeProvider>
