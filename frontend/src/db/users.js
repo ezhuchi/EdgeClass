@@ -24,7 +24,7 @@ export const loginUser = async (username) => {
   }
   
   // Always queue for sync (critical fix: ensure user exists on backend even if exists locally)
-  await queueSync('POST', '/api/users', user);
+  await queueSync('POST', '/api/sync/users', user);
   
   setCurrentUser(user);
   return user;

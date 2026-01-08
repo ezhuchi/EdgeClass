@@ -35,11 +35,11 @@ export const createQuiz = async (quizData) => {
   }
   
   // Queue quiz for sync
-  await queueSync('POST', '/api/quizzes', quiz);
+  await queueSync('POST', '/api/sync/quizzes', quiz);
   
   // Queue questions for sync (critical fix)
   if (questions.length > 0) {
-    await queueSync('POST', '/api/questions', { 
+    await queueSync('POST', '/api/sync/questions', { 
       questions,
       deviceId: quiz.deviceId 
     });
@@ -73,7 +73,7 @@ export const getQuizById = async (id) => {
 export const deleteQuiz = async (id) => {
   await db.quizzes.delete(id);
   await db.questions.where('quizId').equals(id).delete();
-  await queueSync('DELETE', `/api/quizzes/${id}`, { id });
+  await queueSync('DELETE', `/api/sync/quizzes/${id}`, { id });
 };
 
 // Queue sync operation

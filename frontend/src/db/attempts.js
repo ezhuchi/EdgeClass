@@ -35,7 +35,7 @@ export const submitAttempt = async (quizId, answers) => {
   await db.attempts.add(attempt);
   
   // Queue for sync
-  await queueSync('POST', '/api/attempts', attempt);
+  await queueSync('POST', '/api/sync/attempts', attempt);
   
   return attempt;
 };

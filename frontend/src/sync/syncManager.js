@@ -65,12 +65,27 @@ class SyncManager {
 
   // Get pending sync items
   async getPendingSyncItems() {
-    return await db.syncQueue
+    const items = await db.syncQueue
       .where('status')
       .equals('pending')
       .or('status')
       .equals('failed')
       .toArray();
+    
+    // Sort by endpoint to respect foreign key dependencies
+    // Order: users -> quizzes -> questions -> attempts
+    const order = {
+      '/api/sync/users': 1,
+      '/api/sync/quizzes': 2,
+      '/api/sync/questions': 3,
+      '/api/sync/attempts': 4
+    };
+    
+    return items.sort((a, b) => {
+      const orderA = order[a.endpoint] || 999;
+      const orderB = order[b.endpoint] || 999;
+      return orderA - orderB;
+    });
   }
 
   // Sync single item with exponential backoff

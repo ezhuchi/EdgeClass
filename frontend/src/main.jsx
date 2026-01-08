@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
+import { migrateSyncQueueEndpoints } from './utils/migrateSyncQueue.js'; // Migration utility
+
+// Migrate old sync queue endpoints on app load
+migrateSyncQueueEndpoints().catch(console.error);
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
