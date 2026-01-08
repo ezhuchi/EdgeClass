@@ -1,0 +1,3 @@
+Edge Class - Local-First Education for Rural India
+
+An offline-first Progressive Web App that treats the user's device as the primary database and the server as a backup. Teachers and students can create quizzes, take tests, and view results entirely offline. Data intelligently syncs via burst synchronization with exponential backoff when connectivity returns. Built for India's 36.5% of schools without reliable internet, using IndexedDB, Service Workers, and adaptive network detection.
