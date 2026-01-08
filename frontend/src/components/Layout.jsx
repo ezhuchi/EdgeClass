@@ -1,16 +1,35 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import OfflineBadge from './OfflineBadge';
 import { getCurrentUser, clearCurrentUser } from '../db';
 import { useNavigate } from 'react-router-dom';
+import { networkDetector } from '../utils/networkDetector';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [isLiteMode, setIsLiteMode] = useState(networkDetector.getLiteMode());
+  const [networkInfo, setNetworkInfo] = useState(networkDetector.getNetworkInfo());
+
+  useEffect(() => {
+    // Subscribe to network changes
+    const unsubscribe = networkDetector.subscribe((info) => {
+      setNetworkInfo(info);
+      setIsLiteMode(info.isLiteMode);
+    });
+    
+    return unsubscribe;
+  }, []);
 
   const handleLogout = () => {
     clearCurrentUser();
     navigate('/login');
+  };
+
+  const toggleLiteMode = () => {
+    const newMode = networkDetector.toggleLiteMode();
+    setIsLiteMode(newMode);
   };
 
   const isActive = (path) => location.pathname === path;
@@ -71,6 +90,22 @@ const Layout = ({ children }) => {
 
             {/* Right side */}
             <div className="flex items-center gap-4">
+              {/* Lite Mode Toggle */}
+              <button
+                onClick={toggleLiteMode}
+                className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  isLiteMode
+                    ? 'bg-orange-100 text-orange-800 border border-orange-300'
+                    : 'bg-gray-100 text-gray-700 border border-gray-300'
+                }`}
+                title={`${isLiteMode ? 'Disable' : 'Enable'} Lite Mode (data saver)`}
+              >
+                <span className="text-base">{isLiteMode ? '🐢' : '🚀'}</span>
+                <span>
+                  {isLiteMode ? 'Lite Mode' : networkInfo.effectiveType.toUpperCase()}
+                </span>
+              </button>
+
               <OfflineBadge />
               
               {user && (
