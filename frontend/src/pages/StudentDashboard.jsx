@@ -12,6 +12,7 @@ import { useSyncStatus } from '../sync/useSyncStatus';
 const StudentDashboard = () => {
   const [availableQuizzes, setAvailableQuizzes] = useState([]);
   const [myAttempts, setMyAttempts] = useState([]);
+  const [teachers, setTeachers] = useState({});
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('quizzes'); // 'quizzes', 'scores', or 'doubts'
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,8 +39,15 @@ const StudentDashboard = () => {
       const allQuizzes = await getQuizzes();
       
       // Get all teacher users
-      const teachers = await db.users.where('role').equals('teacher').toArray();
-      const teacherIds = new Set(teachers.map(t => t.id));
+      const teacherUsers = await db.users.where('role').equals('teacher').toArray();
+      const teacherIds = new Set(teacherUsers.map(t => t.id));
+      
+      // Create teacher map
+      const teacherMap = {};
+      teacherUsers.forEach(t => {
+        teacherMap[t.id] = t.username;
+      });
+      setTeachers(teacherMap);
       
       // Filter to show only quizzes created by teachers (not by other students or self)
       const teacherQuizzes = allQuizzes.filter(q => teacherIds.has(q.createdBy));
@@ -282,6 +290,7 @@ const StudentDashboard = () => {
                   onTakeQuiz={handleTakeQuiz}
                   totalAttempts={attemptCount}
                   showActions={true}
+                  teacherName={teachers[quiz.createdBy]}
                 />
               );
             })

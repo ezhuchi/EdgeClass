@@ -30,11 +30,6 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', newTheme);
   };
 
-  // Prevent flash of unstyled content
-  if (!mounted) {
-    return children;
-  }
-
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}

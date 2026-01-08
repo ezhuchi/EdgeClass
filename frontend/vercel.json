@@ -2,13 +2,10 @@
   "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "env": {
-    "VITE_API_URL": "https://edgeclass.onrender.com"
-  },
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://edgeclass.onrender.com/api/:path*"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

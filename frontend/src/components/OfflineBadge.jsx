@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { useSyncStatus } from '../sync/useSyncStatus';
 
 const OfflineBadge = () => {
+  const navigate = useNavigate();
   const { isOnline, isSyncing, syncStats } = useSyncStatus();
 
   const getStatusConfig = () => {
@@ -35,12 +37,13 @@ const OfflineBadge = () => {
   const config = getStatusConfig();
 
   return (
-    <div 
-      className={`badge ${config.badge}`}
-      title={config.description}
+    <button
+      onClick={() => navigate('/sync')}
+      className={`badge ${config.badge} !text-black cursor-pointer hover:opacity-80 transition-opacity`}
+      title={`${config.description} - Click to view details`}
     >
       {config.text}
-    </div>
+    </button>
   );
 };
 

@@ -1,4 +1,4 @@
-const QuizCard = ({ quiz, onTakeQuiz, onDelete, showActions = true, totalAttempts = 0, totalStudents = 0, buttonText = "Take Quiz" }) => {
+const QuizCard = ({ quiz, onTakeQuiz, onDelete, showActions = true, totalAttempts = 0, totalStudents = 0, buttonText = "Take Quiz", teacherName }) => {
   const getSyncStatusBadge = () => {
     // Only show badge when NOT synced or syncing
     if (quiz.syncStatus === 'syncing') {
@@ -25,6 +25,9 @@ const QuizCard = ({ quiz, onTakeQuiz, onDelete, showActions = true, totalAttempt
           <h3 className="text-lg font-semibold text-[--text-primary] mb-1">
             {quiz.title}
           </h3>
+          {teacherName && (
+            <p className="text-xs text-[--text-tertiary] mb-2">Created by {teacherName}</p>
+          )}
           {quiz.description && (
             <p className="text-sm text-[--text-secondary] mb-2">{quiz.description}</p>
           )}

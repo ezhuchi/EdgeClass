@@ -1,8 +1,8 @@
 import db from '../db';
 import { networkDetector } from '../utils/networkDetector';
 
-// Use relative URLs - Vite proxy will forward to backend
-const API_URL = '';
+// API URL - uses environment variable for production, empty for dev (Vite proxy)
+const API_URL = import.meta.env.VITE_API_URL || '';
 const MAX_RETRY_COUNT = 5;
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 

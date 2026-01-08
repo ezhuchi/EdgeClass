@@ -141,18 +141,6 @@ const Login = () => {
             </p>
           </div>
         </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card-sm text-center">
-            <p className="font-semibold text-sm text-[--text-primary] mb-1">Offline Ready</p>
-            <p className="text-xs text-[--text-tertiary]">No internet required</p>
-          </div>
-          <div className="card-sm text-center">
-            <p className="font-semibold text-sm text-[--text-primary] mb-1">Auto Sync</p>
-            <p className="text-xs text-[--text-tertiary]">When online</p>
-          </div>
-        </div>
       </div>
     </div>
   );
