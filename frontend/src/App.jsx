@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from './db';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
@@ -9,10 +9,30 @@ import StudentDashboard from './pages/StudentDashboard';
 import CreateQuiz from './pages/CreateQuiz';
 import Quiz from './pages/Quiz';
 import SyncPage from './pages/SyncPage';
+import { useEffect } from 'react';
+
+// Route Logger Component
+function RouteLogger() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const user = getCurrentUser();
+    console.log('🔀 [ROUTER] Route changed:', {
+      path: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      user: user ? `${user.username} (${user.role})` : 'Not logged in',
+      timestamp: new Date().toISOString()
+    });
+  }, [location]);
+  
+  return null;
+}
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
+  console.log('🔒 [AUTH] Protected route check:', { hasUser: !!user, user: user?.username });
   return user ? children : <Navigate to="/login" replace />;
 };
 
@@ -52,9 +72,12 @@ const RoleDashboard = () => {
 };
 
 function App() {
+  console.log('🚀 [APP] Initializing Edge Class application');
+  
   return (
     <ErrorBoundary>
       <Router>
+        <RouteLogger />
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
