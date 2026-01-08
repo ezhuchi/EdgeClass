@@ -59,7 +59,7 @@ Server (Backup & Sync Endpoint)
 
 **Architecture Diagram:**
 
-![EdgeClass Architecture](architecture.png)
+![EdgeClass Architecture](architecture-diagram.png)
 
 **Data Flow:**
 1. User creates/submits data → Saved to **IndexedDB immediately**
