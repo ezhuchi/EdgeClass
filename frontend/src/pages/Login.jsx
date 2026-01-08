@@ -53,12 +53,10 @@ const Login = () => {
 
       <div className="max-w-md w-full">
         {/* Logo & Title */}
-        <div className="text-center mb-10">
-          <div className="w-12 h-12 rounded-lg bg-[--accent-color] flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-xl">E</span>
-          </div>
-          <h1 className="text-3xl font-bold text-[--text-primary] mb-2">EdgeClass</h1>
-          <p className="text-[--text-secondary] text-sm">Offline-first education platform</p>
+        <div className="text-center mb-8">
+          <div className="inline-block text-8xl mb-4">👻</div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Edge Class</h1>
+          <p className="text-gray-600 text-lg">Teach even when the internet ghosts you</p>
         </div>
 
         {/* Login Card */}

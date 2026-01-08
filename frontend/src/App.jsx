@@ -10,6 +10,25 @@ import CreateQuiz from './pages/CreateQuiz';
 import Quiz from './pages/Quiz';
 import SyncPage from './pages/SyncPage';
 import { ThemeProvider } from './context/ThemeContext';
+import { useEffect } from 'react';
+
+// Route Logger Component
+function RouteLogger() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const user = getCurrentUser();
+    console.log('🔀 [ROUTER] Route changed:', {
+      path: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      user: user ? `${user.username} (${user.role})` : 'Not logged in',
+      timestamp: new Date().toISOString()
+    });
+  }, [location]);
+  
+  return null;
+}
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -57,6 +76,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <Router>
+          <RouteLogger />
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />

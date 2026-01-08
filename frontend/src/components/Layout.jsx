@@ -48,12 +48,11 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-[--accent-color] flex items-center justify-center">
-                <span className="text-white font-bold">E</span>
-              </div>
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <span className="text-3xl">👻</span>
               <div>
-                <h1 className="text-lg font-bold text-[--text-primary]">EdgeClass</h1>
+                <h1 className="text-xl font-bold text-gray-900">Edge Class</h1>
+                <p className="text-xs text-gray-500">Offline-First Education</p>
               </div>
             </Link>
 
@@ -148,8 +147,11 @@ const Layout = ({ children }) => {
       {/* Footer */}
       <footer className="bg-[--bg-secondary] border-t border-[--border-color] mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-sm text-[--text-tertiary]">
-            <p>EdgeClass - Offline-First Education Platform</p>
+          <div className="text-center text-sm text-gray-600">
+            <p>👻 Edge Class - Built for offline-first education</p>
+            <p className="text-xs text-gray-500 mt-1">
+              "Teach even when the internet ghosts you"
+            </p>
           </div>
         </div>
       </footer>
