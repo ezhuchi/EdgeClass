@@ -58,16 +58,32 @@ Deploy to Render (free tier):
 - **Offline Submission**: Students can take quizzes offline
 - **Auto Sync**: Data syncs when connection returns
 - **Retry Logic**: Failed syncs retry automatically
-- **Conflict Resolution**: Handles sync conflicts gracefull
-## Testing the Offline Magic
+- **Conflict Resolution**: Handles sync conflicts gracefully
 
-1. **Login** → Use any username (e.g., "DemoTeacher")
-2. **Create Quiz** → Add questions while online
-3. **Go Offline** → DevTools → Network → Check "Offline"
-4. **Create Another Quiz** → Still works! Data saves to IndexedDB
-5. **Take Quiz Offline** → Submit answers
-6. **Go Online** → Uncheck "Offline" → Watch burst sync happen
-7. **Check Sync Page** → See real-time sync activity
+---
+
+## Deploy to Production
+
+### Recommended: Split Deployment (100% FREE)
+
+Deploy frontend and backend separately for better performance and cost:
+
+```bash
+./deploy-split.sh
+```
+
+- **Frontend** → Vercel (FREE unlimited, global CDN)
+- **Backend** → Render (FREE 750 hours/month)
+
+### Alternative: Single Deployment
+
+Deploy everything together on Render:
+
+```bash
+./deploy-render.sh
+```
+
+Full deployment options: [DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)
 
 ---
 

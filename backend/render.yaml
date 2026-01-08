@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ghostclass-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: NODE_ENV=production node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    disk:
+      name: ghostclass-data
+      mountPath: /app/data
+      sizeGB: 1
