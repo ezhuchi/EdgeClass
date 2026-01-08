@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './db/init.js';
@@ -57,6 +58,22 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
+// Rate limiting for sync endpoints (100 requests per 15 minutes)
+const syncLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many sync requests, please try again later',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// General API limiter (stricter for non-sync endpoints)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: 'Too many requests, please try again later',
+});
+
 // Request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -67,8 +84,8 @@ app.use((req, res, next) => {
 initDatabase();
 
 // Routes
-app.use('/api/sync', syncRoutes);
-app.use('/api/stats', statsRoutes);
+app.use('/api/sync', syncLimiter, syncRoutes);
+app.use('/api/stats', apiLimiter, statsRoutes);
 app.use('/api', doubtsRoutes);
 
 // Health check
