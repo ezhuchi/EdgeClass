@@ -8,25 +8,21 @@ An educational platform that works 100% offline and syncs when connectivity retu
 
 ## Quick Start
 
-### Option 1: Docker (Recommended)
+### Option 1: Quick Start Script (Recommended)
 ```bash
-# Start everything
-docker-compose up
-
-# Access the app
-Frontend: http://localhost:5173
-Backend:  http://localhost:3000
+./start.sh
 ```
+This will start both frontend (port 5173) and backend (port 3000) using Docker.
 
-### Option 2: Local Development
+### Option 2: Manual Local Development
 ```bash
-# Terminal 1 - Frontend
-cd frontend
+# Terminal 1 - Backend
+cd backend
 npm install
 npm run dev
 
-# Terminal 2 - Backend
-cd backend
+# Terminal 2 - Frontend  
+cd frontend
 npm install
 npm run dev
 ```
@@ -35,6 +31,34 @@ npm run dev
 
 ---
 
+## Deploy to Production
+
+Deploy to Render (free tier):
+```bash
+./deploy-reOffline Functionality
+
+### Teacher Flow
+1. Login with role "Teacher" (username: any name)
+2. Create a quiz with multiple questions
+3. Go offline (DevTools → Network → Offline)
+4. Create another quiz - still works! (saved to IndexedDB)
+5. Go online - watch automatic sync
+6. View sync status page to see sync activity
+
+### Student Flow
+1. Login with role "Student" (username: any name)
+2. Browse available quizzes created by teachers
+3. Go offline (DevTools → Network → Offline)
+4. Take a quiz and submit answers - works offline!
+5. Go online - answers sync automatically
+6. View your scores in student dashboard
+
+### Key Features to Test
+- **Offline Creation**: Create quizzes without internet
+- **Offline Submission**: Students can take quizzes offline
+- **Auto Sync**: Data syncs when connection returns
+- **Retry Logic**: Failed syncs retry automatically
+- **Conflict Resolution**: Handles sync conflicts gracefull
 ## Testing the Offline Magic
 
 1. **Login** → Use any username (e.g., "DemoTeacher")
@@ -96,51 +120,70 @@ EdgeClass/
 
 ---
 
-## Architecture Explained
+## Architecture Overview
 
-**Core Philosophy:** *"The device is truth. The server is backup."*
+**Design Philosophy:** The user's device is the primary database. The server only acts as a backup and sync point.
+
+### Data Flow
 
 ```
-USER DEVICE (Primary)              SYNC SERVER (Backup)
-┌─────────────────┐                ┌──────────────┐
-│  React PWA      │                │  Node.js API │
-│  ┌───────────┐  │                │              │
-│  │ IndexedDB │◄─┼────────────────┼─ Never reads │
-│  │ (Dexie)   │  │  Writes only   │   from here  │
-│  └───────────┘  │                │              │
-│       ▲         │                │  ┌─────────┐ │
-│       │ CRUD    │   Burst Sync   │  │ SQLite  │ │
-│       │         │   (5s→15s→45s) │  │ (Backup)│ │
-│  ┌────┴──────┐  │◄──────────────►│  └─────────┘ │
-│  │ UI Pages  │  │  When online   │              │
-│  └───────────┘  │                │  Analytics + │
-│                 │                │  Audit Trail │
-│  Service Worker │                └──────────────┘
-│  (Workbox)      │
+USER DEVICE                          SYNC SERVER
+┌─────────────────┐                 ┌──────────────┐
+│  React App      │                 │  Node.js API │
+│  ┌───────────┐  │                 │              │
+│  │ IndexedDB │  │   Sync Queue    │  ┌─────────┐ │
+│  │ (Primary) │◄─┼────────────────►│  │ SQLite  │ │
+│  └───────────┘  │   When Online   │  │ (Backup)│ │
+│       ▲         │                 │  └─────────┘ │
+│       │         │                 │              │
+│  ┌────┴──────┐  │                 │  Analytics + │
+│  │ UI Pages  │  │                 │  Audit Trail │
+│  └───────────┘  │                 └──────────────┘
+│                 │
+│  Service Worker │
+│  (Offline Cache)│
 └─────────────────┘
 ```
 
-**Flow:**
-1. User creates quiz → Saved to IndexedDB instantly
-2. Data added to sync queue with `pending` status
-3. Sync manager checks connectivity every 5 seconds
-4. When online → Batch sends to backend (max 5 items)
-5. Backend stores in SQLite (backup + analytics)
-6. Retry with exponential backoff if sync fails (5s → 15s → 45s)
+### How It Works
+
+1. **User creates data** → Saved to IndexedDB instantly (no wait)
+2. **Added to sync queue** → Marked as 'pending'
+3. **Sync manager runs** → Checks connectivity every 5 seconds
+4. **When online** → Sends data to backend in batches (max 5 items)
+5. **Backend stores** → Saves to SQLite for backup and analytics
+6. **Retry on failure** → Exponential backoff (5s → 15s → 45s → 135s)
+
+### Key Design Decisions
+
+- **IndexedDB First**: All reads/writes happen locally for instant response
+- **Eventual Consistency**: Server eventually receives all data when online
+- **Conflict-Free**: Device ID + timestamps prevent data conflicts
+- **Graceful Degradation**: App fully functional offline, enhanced when online
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | React 18 + Vite | Fast HMR, modern dev experience |
-| | Dexie.js | Promise-based IndexedDB wrapper |
-| | Workbox | Service Worker caching strategies |
-| | Tailwind CSS | Utility-first styling |
-| **Backend** | Express | Lightweight sync API |
-| | Better-SQLite3 | Synchronous DB for burst sync |
-| **DevOps** | Docker Compose | Single-command deployment |
+### Frontend
+- **React 18** - UI framework with hooks
+- **Vite** - Fast build tool with HMR
+- **Dexie.js** - IndexedDB wrapper for client-side storage
+- **Workbox** - Service Worker for offline caching
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Client-side routing
+
+### Backend
+- **Express** - Lightweight Node.js web framework
+- **Better-SQLite3** - Synchronous SQLite database
+- **Zod** - Schema validation
+- **CORS** - Cross-origin resource sharing
+
+### DevOps
+- **Docker** - Containerization for development
+- **Render** - Production hosting platform
+- **GitHub** - Version control and CI/CD trigger
+
 
 ---
 
