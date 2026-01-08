@@ -1,12 +1,19 @@
 import express from 'express';
 import { getDB } from '../db/init.js';
+import { 
+  validateBody, 
+  userSchema, 
+  quizSchema, 
+  questionsBatchSchema, 
+  attemptSchema 
+} from '../validation/schemas.js';
 
 const router = express.Router();
 
 // Sync users
-router.post('/users', (req, res) => {
+router.post('/users', validateBody(userSchema), (req, res) => {
   try {
-    const { id, username, deviceId, createdAt } = req.body;
+    const { id, username, deviceId, createdAt } = req.validatedBody;
     const db = getDB();
 
     const stmt = db.prepare(`
@@ -34,10 +41,29 @@ router.post('/users', (req, res) => {
 });
 
 // Sync quizzes
-router.post('/quizzes', (req, res) => {
+router.post('/quizzes', validateBody(quizSchema), (req, res) => {
   try {
-    const { id, title, description, createdBy, createdAt, updatedAt, deviceId } = req.body;
+    const { id, title, description, createdBy, createdAt, updatedAt, deviceId } = req.validatedBody;
     const db = getDB();
+
+    // Check for conflicts (latest timestamp wins)
+    const existing = db.prepare('SELECT updatedAt FROM quizzes WHERE id = ?').get(id);
+    
+    if (existing) {
+      const existingTime = new Date(existing.updatedAt).getTime();
+      const incomingTime = new Date(updatedAt).getTime();
+      
+      if (existingTime > incomingTime) {
+        // Server has newer data, reject incoming
+        return res.status(409).json({
+          success: false,
+          conflict: true,
+          message: 'Server has newer version',
+          serverUpdatedAt: existing.updatedAt,
+          clientUpdatedAt: updatedAt
+        });
+      }
+    }
 
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO quizzes (id, title, description, createdBy, createdAt, updatedAt, deviceId, syncedAt)
@@ -63,10 +89,52 @@ router.post('/quizzes', (req, res) => {
   }
 });
 
-// Sync attempts
-router.post('/attempts', (req, res) => {
+// Sync questions
+router.post('/questions', validateBody(questionsBatchSchema), (req, res) => {
   try {
-    const { id, quizId, userId, answers, score, totalQuestions, completedAt, deviceId } = req.body;
+    const { questions, deviceId } = req.validatedBody;
+    const db = getDB();
+
+    if (!questions || !Array.isArray(questions)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Questions array is required' 
+      });
+    }
+
+    // Batch insert questions
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO questions (id, quizId, question, options, correctAnswer, \`order\`)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    const transaction = db.transaction(() => {
+      questions.forEach(q => {
+        stmt.run(q.id, q.quizId, q.question, q.options, q.correctAnswer, q.order);
+        logSync(db, deviceId, 'question', q.id, 'sync');
+      });
+    });
+
+    transaction();
+
+    res.json({ 
+      success: true, 
+      count: questions.length,
+      message: `${questions.length} questions synced successfully` 
+    });
+  } catch (error) {
+    console.error('Error syncing questions:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// Sync attempts
+router.post('/attempts', validateBody(attemptSchema), (req, res) => {
+  try {
+    const { id, quizId, userId, answers, score, totalQuestions, completedAt, deviceId } = req.validatedBody;
     const db = getDB();
 
     const stmt = db.prepare(`
