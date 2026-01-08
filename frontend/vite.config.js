@@ -80,8 +80,7 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: true,
-        type: 'module'
+        enabled: false  // Disable SW in dev to avoid MIME type errors
       }
     })
   ],
