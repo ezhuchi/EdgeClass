@@ -37,9 +37,20 @@ const CreateQuiz = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!title.trim()) {
+    // Enhanced Validation
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
       alert('Please enter a quiz title');
+      return;
+    }
+    
+    if (trimmedTitle.length < 3) {
+      alert('Quiz title must be at least 3 characters long');
+      return;
+    }
+    
+    if (trimmedTitle.length > 200) {
+      alert('Quiz title must be less than 200 characters');
       return;
     }
 
@@ -47,18 +58,45 @@ const CreateQuiz = () => {
       alert('Please add at least one question');
       return;
     }
+    
+    if (questions.length > 50) {
+      alert('Maximum 50 questions allowed per quiz');
+      return;
+    }
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      if (!q.question.trim()) {
+      const trimmedQuestion = q.question.trim();
+      
+      if (!trimmedQuestion) {
         alert(`Question ${i + 1} is empty`);
         return;
       }
-      if (q.options.some(opt => !opt.trim())) {
+      
+      if (trimmedQuestion.length < 5) {
+        alert(`Question ${i + 1} must be at least 5 characters long`);
+        return;
+      }
+      
+      if (trimmedQuestion.length > 500) {
+        alert(`Question ${i + 1} is too long (max 500 characters)`);
+        return;
+      }
+      
+      const trimmedOptions = q.options.map(opt => opt.trim());
+      if (trimmedOptions.some(opt => !opt)) {
         alert(`Question ${i + 1} has empty options`);
         return;
       }
-      if (!q.correctAnswer.trim()) {
+      
+      // Check for duplicate options
+      const uniqueOptions = new Set(trimmedOptions);
+      if (uniqueOptions.size !== trimmedOptions.length) {
+        alert(`Question ${i + 1} has duplicate options`);
+        return;
+      }
+      
+      if (!q.correctAnswer && q.correctAnswer !== 0) {
         alert(`Question ${i + 1} has no correct answer selected`);
         return;
       }
@@ -67,9 +105,13 @@ const CreateQuiz = () => {
     setLoading(true);
     try {
       await createQuiz({
-        title: title.trim(),
+        title: trimmedTitle,
         description: description.trim(),
-        questions
+        questions: questions.map(q => ({
+          question: q.question.trim(),
+          options: q.options.map(opt => opt.trim()),
+          correctAnswer: q.correctAnswer
+        }))
       });
 
       alert('✅ Quiz created successfully! (Saved offline, will sync when online)');
