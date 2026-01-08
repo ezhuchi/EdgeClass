@@ -21,10 +21,10 @@ export const loginUser = async (username) => {
     };
     
     await db.users.add(user);
-    
-    // Queue for sync
-    await queueSync('POST', '/api/users', user);
   }
+  
+  // Always queue for sync (critical fix: ensure user exists on backend even if exists locally)
+  await queueSync('POST', '/api/users', user);
   
   setCurrentUser(user);
   return user;
