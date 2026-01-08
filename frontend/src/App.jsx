@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { getCurrentUser } from './db';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
+import { ToastProvider } from './components/Toast';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
@@ -76,9 +77,10 @@ function App() {
   
   return (
     <ErrorBoundary>
-      <Router>
-        <RouteLogger />
-        <Routes>
+      <ToastProvider>
+        <Router>
+          <RouteLogger />
+          <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
 
@@ -130,7 +132,8 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-      </Router>
+        </Router>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

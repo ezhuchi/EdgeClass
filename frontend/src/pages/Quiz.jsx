@@ -3,14 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizById } from '../db/quizzes';
 import { submitAttempt } from '../db/attempts';
 import { getCurrentUser } from '../db';
+import { useToast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Quiz = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const toast = useToast();
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -19,7 +22,7 @@ const Quiz = () => {
   useEffect(() => {
     // Only students can take quizzes
     if (!user || user.role !== 'student') {
-      alert('Only students can take quizzes.');
+      toast.error('Only students can take quizzes.');
       navigate('/dashboard');
       return;
     }
@@ -30,29 +33,30 @@ const Quiz = () => {
   const loadQuiz = async () => {
     setLoading(true);
     try {
-      console.log('Loading quiz with ID:', id);
+      console.log('📝 [QUIZ] Loading quiz:', id);
       const quizData = await getQuizById(id);
-      console.log('Quiz data loaded:', quizData);
+      console.log('✅ [QUIZ] Quiz loaded:', quizData);
       
       if (!quizData) {
-        console.error('Quiz not found in database');
-        alert('Quiz not found');
+        console.error('❌ [QUIZ] Quiz not found');
+        toast.error('Quiz not found');
         navigate('/dashboard');
         return;
       }
       
       if (!quizData.questions || quizData.questions.length === 0) {
-        console.error('Quiz has no questions');
-        alert('This quiz has no questions');
+        console.error('❌ [QUIZ] No questions found');
+        toast.error('This quiz has no questions');
         navigate('/dashboard');
         return;
       }
       
       setQuiz(quizData);
       setAnswers(new Array(quizData.questions.length).fill(''));
+      toast.success(`Quiz loaded: ${quizData.questions.length} questions`);
     } catch (error) {
-      console.error('Error loading quiz:', error);
-      alert('Failed to load quiz');
+      console.error('❌ [QUIZ] Error loading quiz:', error);
+      toast.error('Failed to load quiz');
       navigate('/dashboard');
     } finally {
       setLoading(false);
@@ -79,19 +83,32 @@ const Quiz = () => {
 
   const handleSubmit = async () => {
     // Check if all questions are answered
-    if (answers.some(a => !a)) {
-      if (!confirm('Some questions are unanswered. Submit anyway?')) {
+    const unanswered = answers.filter(a => !a).length;
+    if (unanswered > 0) {
+      if (!confirm(`${unanswered} question(s) unanswered. Submit anyway?`)) {
         return;
       }
     }
 
+    setSubmitting(true);
     try {
+      console.log('📤 [QUIZ] Submitting quiz...');
       const attemptResult = await submitAttempt(id, answers);
+      console.log('✅ [QUIZ] Quiz submitted successfully');
       setResult(attemptResult);
       setShowResults(true);
+      toast.success('Quiz submitted successfully!');
     } catch (error) {
-      console.error('Error submitting quiz:', error);
-      alert('Failed to submit quiz. Please try again.');
+      console.error('❌ [QUIZ] Error submitting quiz:', error);
+      toast.error('Failed to submit quiz. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
+  const handleCancelQuiz = () => {
+    if (confirm('Are you sure you want to exit? Your progress will be lost.')) {
+      navigate('/dashboard');
     }
   };
 
@@ -201,8 +218,16 @@ const Quiz = () => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={handleCancelQuiz}
+            className="text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
           <span className="text-sm text-gray-600">
@@ -263,9 +288,10 @@ const Quiz = () => {
           {currentQuestion === quiz.questions.length - 1 ? (
             <button
               onClick={handleSubmit}
-              className="btn btn-primary"
+              disabled={submitting}
+              className="btn btn-primary disabled:opacity-50"
             >
-              Submit Quiz
+              {submitting ? 'Submitting...' : 'Submit Quiz'}
             </button>
           ) : (
             <button

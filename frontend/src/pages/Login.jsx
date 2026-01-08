@@ -6,19 +6,40 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [role, setRole] = useState('student'); // Default to student
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!username.trim()) return;
+    setError('');
+    
+    const trimmedUsername = username.trim();
+    
+    // Validation
+    if (!trimmedUsername) {
+      setError('Please enter a username');
+      return;
+    }
+    
+    if (trimmedUsername.length < 3) {
+      setError('Username must be at least 3 characters');
+      return;
+    }
+    
+    if (trimmedUsername.length > 20) {
+      setError('Username must be less than 20 characters');
+      return;
+    }
 
     setLoading(true);
     try {
-      await loginUser(username.trim(), role);
+      console.log('👤 [AUTH] Logging in:', trimmedUsername, `(${role})`);
+      await loginUser(trimmedUsername, role);
+      console.log('✅ [AUTH] Login successful, redirecting to dashboard...');
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Login failed. Please try again.');
+    } catch (err) {
+      console.error('❌ [AUTH] Login error:', err);
+      setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -84,12 +105,28 @@ const Login = () => {
                 id="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                className="input"
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setError(''); // Clear error on input
+                }}
+                placeholder="e.g., john_doe or teacher_maya"
+                className={`input ${
+                  error ? 'border-red-500 focus:ring-red-500' : ''
+                }`}
                 required
                 autoFocus
+                minLength={3}
+                maxLength={20}
               />
+              {error && (
+                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span>{error}</span>
+                </p>
+              )}
+              <p className="mt-1.5 text-xs text-gray-500">
+                💡 Choose any username (3-20 characters). It's saved locally.
+              </p>
             </div>
 
             <button
