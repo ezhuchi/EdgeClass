@@ -1,4 +1,5 @@
 import db from '../db';
+import { networkDetector } from '../utils/networkDetector';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const MAX_RETRY_COUNT = 5;
@@ -9,6 +10,8 @@ class SyncManager {
   constructor() {
     this.isSyncing = false;
     this.listeners = [];
+    this.retryScheduler = null;
+    this.startRetryScheduler();
   }
 
   // Subscribe to sync events
@@ -17,6 +20,37 @@ class SyncManager {
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
     };
+  }
+
+  // Start retry scheduler (critical fix: execute scheduled retries)
+  startRetryScheduler() {
+    // Check for items needing retry every 10 seconds
+    this.retryScheduler = setInterval(async () => {
+      if (this.isSyncing || !navigator.onLine) return;
+      
+      const now = Date.now();
+      const itemsToRetry = await db.syncQueue
+        .where('status')
+        .equals('pending')
+        .filter(item => {
+          if (!item.nextRetryAt) return false;
+          return new Date(item.nextRetryAt).getTime() <= now;
+        })
+        .toArray();
+      
+      if (itemsToRetry.length > 0) {
+        console.log(`🔄 Retry scheduler: ${itemsToRetry.length} items ready for retry`);
+        this.syncAll();
+      }
+    }, 10000); // Check every 10 seconds
+  }
+
+  // Stop retry scheduler
+  stopRetryScheduler() {
+    if (this.retryScheduler) {
+      clearInterval(this.retryScheduler);
+      this.retryScheduler = null;
+    }
   }
 
   // Notify all listeners
@@ -171,8 +205,13 @@ class SyncManager {
       let successCount = 0;
       let failCount = 0;
 
-      // Sync items in batches to avoid overwhelming the server
-      const BATCH_SIZE = 5;
+      // Use adaptive batch size based on connection
+      const networkInfo = networkDetector.getNetworkInfo();
+      const BATCH_SIZE = networkInfo.batchSize; // 2 for 2G, 5 for 4G
+      const BATCH_DELAY = networkInfo.isSlow ? 2000 : 1000; // Longer delay for slow connections
+      
+      console.log(`🌐 Network: ${networkInfo.effectiveType}, Batch: ${BATCH_SIZE}, Delay: ${BATCH_DELAY}ms`);
+      
       for (let i = 0; i < pendingItems.length; i += BATCH_SIZE) {
         const batch = pendingItems.slice(i, i + BATCH_SIZE);
         
@@ -191,9 +230,9 @@ class SyncManager {
           failCount
         });
 
-        // Small delay between batches
+        // Adaptive delay between batches
         if (i + BATCH_SIZE < pendingItems.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
         }
       }
 
@@ -261,12 +300,30 @@ if (typeof window !== 'undefined') {
     console.log('Network disconnected');
   });
 
-  // Periodic sync check (every 5 minutes)
-  setInterval(() => {
+  // Adaptive periodic sync based on connection type
+  const getSyncInterval = () => {
+    const networkInfo = networkDetector.getNetworkInfo();
+    return networkInfo.syncDelay || (5 * 60 * 1000); // Default 5 minutes
+  };
+
+  // Initial sync
+  let syncIntervalId = setInterval(() => {
     if (navigator.onLine) {
       syncManager.syncAll();
     }
-  }, 5 * 60 * 1000);
+  }, getSyncInterval());
+  
+  // Update sync interval when network changes
+  networkDetector.subscribe((networkInfo) => {
+    clearInterval(syncIntervalId);
+    const newInterval = networkInfo.syncDelay || (5 * 60 * 1000);
+    console.log(`🔄 Updated sync interval: ${newInterval / 1000}s (${networkInfo.effectiveType})`);
+    syncIntervalId = setInterval(() => {
+      if (navigator.onLine) {
+        syncManager.syncAll();
+      }
+    }, newInterval);
+  });
 }
 
 export default syncManager;
