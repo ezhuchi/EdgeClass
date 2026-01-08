@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - ghostclass-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - sqlite-data:/app/data
+    environment:
+      - NODE_ENV=development
+      - DB_PATH=/app/data/ghost.db
+    networks:
+      - ghostclass-network
+
+volumes:
+  sqlite-data:
+
+networks:
+  ghostclass-network:
+    driver: bridge
