@@ -12,6 +12,8 @@ const Dashboard = () => {
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('quizzes'); // 'quizzes' or 'attempts'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'title'
   const navigate = useNavigate();
   const user = getCurrentUser();
   const { syncStats } = useSyncStatus();
@@ -35,6 +37,33 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+  
+  // Filter and sort quizzes
+  const filteredQuizzes = quizzes
+    .filter(quiz => 
+      quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quiz.description && quiz.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'title':
+          return a.title.localeCompare(b.title);
+        default:
+          return 0;
+      }
+    });
+  
+  // Filter and sort attempts
+  const filteredAttempts = attempts
+    .filter(attempt => {
+      const quiz = quizzes.find(q => q.id === attempt.quizId);
+      return quiz && quiz.title.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
 
   const handleTakeQuiz = (quiz) => {
     navigate(`/quiz/${quiz.id}`);
@@ -140,50 +169,106 @@ const Dashboard = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
-        <button
-          onClick={() => setView('quizzes')}
-          className={`px-4 py-2 font-medium transition-colors ${
-            view === 'quizzes'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          📚 Available Quizzes ({quizzes.length})
-        </button>
-        <button
-          onClick={() => setView('attempts')}
-          className={`px-4 py-2 font-medium transition-colors ${
-            view === 'attempts'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          ✅ My Attempts ({attempts.length})
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setView('quizzes')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              view === 'quizzes'
+                ? 'text-primary-600 border-b-2 border-primary-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            📚 Available Quizzes ({filteredQuizzes.length})
+          </button>
+          <button
+            onClick={() => setView('attempts')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              view === 'attempts'
+                ? 'text-primary-600 border-b-2 border-primary-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            ✅ My Attempts ({filteredAttempts.length})
+          </button>
+        </div>
+
+        {/* Search and Sort */}
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1 sm:w-64">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          
+          {view === 'quizzes' && (
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title">A-Z</option>
+            </select>
+          )}
+        </div>
       </div>
 
       {/* Content */}
       {view === 'quizzes' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quizzes.length === 0 ? (
+          {filteredQuizzes.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No quizzes yet
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Create your first quiz to get started
-              </p>
-              <button
-                onClick={() => navigate('/create-quiz')}
-                className="btn btn-primary"
-              >
-                Create Quiz
-              </button>
+              {searchTerm ? (
+                <>
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No quizzes found
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Try a different search term
+                  </p>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="btn btn-secondary"
+                  >
+                    Clear Search
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-6xl mb-4">📝</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No quizzes yet
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Create your first quiz to get started
+                  </p>
+                  <button
+                    onClick={() => navigate('/create-quiz')}
+                    className="btn btn-primary"
+                  >
+                    Create Quiz
+                  </button>
+                </>
+              )}
             </div>
           ) : (
-            quizzes.map((quiz) => (
+            filteredQuizzes.map((quiz) => (
               <QuizCard
                 key={quiz.id}
                 quiz={quiz}
@@ -195,18 +280,38 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {attempts.length === 0 ? (
+          {filteredAttempts.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">🎯</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No attempts yet
-              </h3>
-              <p className="text-gray-600">
-                Take a quiz to see your results here
-              </p>
+              {searchTerm ? (
+                <>
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No attempts found
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Try a different search term
+                  </p>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="btn btn-secondary"
+                  >
+                    Clear Search
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-6xl mb-4">🎯</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No attempts yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Take a quiz to see your results here
+                  </p>
+                </>
+              )}
             </div>
           ) : (
-            attempts.map((attempt) => {
+            filteredAttempts.map((attempt) => {
               const quiz = quizzes.find((q) => q.id === attempt.quizId);
               const percentage = Math.round((attempt.score / attempt.totalQuestions) * 100);
               
