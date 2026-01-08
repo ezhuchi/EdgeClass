@@ -17,13 +17,6 @@ const isProduction = process.env.NODE_ENV === 'production';
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend files in production
-if (isProduction) {
-  const frontendPath = path.join(__dirname, 'public');
-  app.use(express.static(frontendPath));
-  console.log(`Serving static files from: ${frontendPath}`);
-}
-
 // Request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -46,22 +39,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Serve frontend for all non-API routes in production
-if (isProduction) {
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/health')) {
-      res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Not found',
+    path: req.path,
+    message: 'This is an API-only server. Frontend is deployed separately.'
   });
-} else {
-  // 404 handler for development
-  app.use((req, res) => {
-    res.status(404).json({ 
-      error: 'Not found',
-      path: req.path 
-    });
-  });
-}
+});
 
 // Error handler
 app.use((err, req, res, next) => {
