@@ -2,8 +2,9 @@
 
 # Commit script for GhostClass changes
 
+cd "$(dirname "$0")"
+
 git add .
 git commit -m "fix(quiz): resolve infinite loop in Quiz component and add role-based validation"
-git push
 
-echo "✅ Changes committed and pushed successfully!"
+echo "✅ Changes committed successfully!"
