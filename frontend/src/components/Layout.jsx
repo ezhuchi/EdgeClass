@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { House, ChartBar, ArrowsClockwise, NotePencil, SignOut, GraduationCap } from '@phosphor-icons/react';
 import OfflineBadge from './OfflineBadge';
 import SyncStatusIndicator from './SyncStatusIndicator';
 import OnboardingModal from './OnboardingModal';
@@ -50,9 +51,9 @@ const Layout = ({ children }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2">
-              <span className="text-3xl">�</span>
+              <GraduationCap size={32} weight="duotone" className="text-primary-600" />
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Edge Class</h1>
+                <h1 className="text-xl font-bold text-gray-900">{copy.appName}</h1>
                 <p className="text-xs text-gray-500">Offline-First Education</p>
               </div>
             </Link>
@@ -61,34 +62,37 @@ const Layout = ({ children }) => {
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/dashboard"
-                className={`text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors flex items-center gap-2 ${
                   isActive('/dashboard')
                     ? 'text-primary-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
+                <House size={18} weight={isActive('/dashboard') ? 'fill' : 'regular'} />
                 Dashboard
               </Link>
               {user?.role === 'teacher' && (
                 <Link
                   to="/create-quiz"
-                  className={`text-sm font-medium transition-colors ${
+                  className={`text-sm font-medium transition-colors flex items-center gap-2 ${
                     isActive('/create-quiz')
                       ? 'text-primary-600'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
+                  <NotePencil size={18} weight={isActive('/create-quiz') ? 'fill' : 'regular'} />
                   Create Quiz
                 </Link>
               )}
               <Link
                 to="/sync"
-                className={`text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors flex items-center gap-2 ${
                   isActive('/sync')
                     ? 'text-primary-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
+                <ArrowsClockwise size={18} weight={isActive('/sync') ? 'fill' : 'regular'} />
                 Sync Status
               </Link>
             </nav>
@@ -107,14 +111,25 @@ const Layout = ({ children }) => {
                 <div className="flex items-center gap-3">
                   <div className="text-right hidden sm:block">
                     <p className="text-sm font-medium text-gray-900">{user.username}</p>
-                    <p className="text-xs text-gray-500">
-                      {user.role === 'teacher' ? '👨‍🏫 Teacher' : '🎓 Student'}
+                    <p className="text-xs text-gray-500 flex items-center justify-end gap-1">
+                      {user.role === 'teacher' ? (
+                        <>
+                          <ChartBar size={14} weight="bold" />
+                          Teacher
+                        </>
+                      ) : (
+                        <>
+                          <GraduationCap size={14} weight="bold" />
+                          Student
+                        </>
+                      )}
                     </p>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
                   >
+                    <SignOut size={18} />
                     Logout
                   </button>
                 </div>

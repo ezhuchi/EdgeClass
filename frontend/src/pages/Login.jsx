@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GraduationCap, ChartBar, Lightbulb, Sparkle, ArrowsClockwise } from '@phosphor-icons/react';
 import { loginUser } from '../db/users';
 import { copy } from '../constants/copy';
 
@@ -51,7 +52,9 @@ const Login = () => {
       <div className="max-w-md w-full">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-block text-8xl mb-4">🌾</div>
+          <div className="inline-block mb-4">
+            <GraduationCap size={96} weight="duotone" className="text-primary-600" />
+          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">{copy.appName}</h1>
           <p className="text-gray-600 text-lg">{copy.tagline}</p>
         </div>
@@ -78,7 +81,9 @@ const Login = () => {
                       : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <div className="text-3xl mb-1">🎓</div>
+                  <div className="mb-2 flex justify-center">
+                    <GraduationCap size={40} weight="duotone" className={role === 'student' ? 'text-primary-600' : 'text-gray-400'} />
+                  </div>
                   <div className="font-semibold">{copy.login.studentRole}</div>
                   <div className="text-xs mt-1 opacity-75">Take quizzes</div>
                 </button>
@@ -91,7 +96,9 @@ const Login = () => {
                       : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <div className="text-3xl mb-1">👨‍🏫</div>
+                  <div className="mb-2 flex justify-center">
+                    <ChartBar size={40} weight="duotone" className={role === 'teacher' ? 'text-primary-600' : 'text-gray-400'} />
+                  </div>
                   <div className="font-semibold">{copy.login.teacherRole}</div>
                   <div className="text-xs mt-1 opacity-75">Create quizzes</div>
                 </button>
@@ -139,7 +146,8 @@ const Login = () => {
           </form>
 
           {/* Offline Notice */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-start gap-3">
+            <Sparkle size={24} weight="duotone" className="text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-800">
               <strong>{copy.login.offlineNotice}</strong>
               <br />
@@ -151,16 +159,22 @@ const Login = () => {
         {/* Features */}
         <div className="mt-8 grid grid-cols-3 gap-4 text-center">
           <div className="p-3 bg-white rounded-lg shadow-sm">
-            <div className="text-2xl mb-1">📱</div>
-            <p className="text-xs text-gray-600">PWA Ready</p>
+            <div className="mb-2 flex justify-center">
+              <GraduationCap size={32} weight="duotone" className="text-primary-600" />
+            </div>
+            <p className="text-xs text-gray-600 font-medium">PWA Ready</p>
           </div>
           <div className="p-3 bg-white rounded-lg shadow-sm">
-            <div className="text-2xl mb-1">🔄</div>
-            <p className="text-xs text-gray-600">Auto Sync</p>
+            <div className="mb-2 flex justify-center">
+              <ArrowsClockwise size={32} weight="duotone" className="text-green-600" />
+            </div>
+            <p className="text-xs text-gray-600 font-medium">Auto Sync</p>
           </div>
           <div className="p-3 bg-white rounded-lg shadow-sm">
-            <div className="text-2xl mb-1">💾</div>
-            <p className="text-xs text-gray-600">Local First</p>
+            <div className="mb-2 flex justify-center">
+              <Lightbulb size={32} weight="duotone" className="text-amber-600" />
+            </div>
+            <p className="text-xs text-gray-600 font-medium">Local First</p>
           </div>
         </div>
       </div>

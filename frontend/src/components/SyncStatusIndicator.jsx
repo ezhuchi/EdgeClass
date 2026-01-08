@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { CheckCircle, Warning, Prohibit, ArrowsClockwise } from '@phosphor-icons/react';
 import { useSyncStatus } from '../sync/useSyncStatus';
 import { copy } from '../constants/copy';
 
@@ -14,36 +15,45 @@ const SyncStatusIndicator = () => {
     status = {
       ...copy.statusIndicators.offlineQueued,
       label: copy.statusIndicators.offlineQueued.label(pendingCount),
+      Icon: Prohibit,
       bgColor: 'bg-red-50',
       borderColor: 'border-red-300',
-      textColor: 'text-red-800'
+      textColor: 'text-red-800',
+      iconColor: 'text-red-600'
     };
   } else if (isOnline && pendingCount > 0) {
     status = {
       ...copy.statusIndicators.onlinePending,
       label: copy.statusIndicators.onlinePending.label(pendingCount),
+      Icon: Warning,
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-300',
-      textColor: 'text-amber-800'
+      textColor: 'text-amber-800',
+      iconColor: 'text-amber-600'
     };
   } else {
     status = {
       ...copy.statusIndicators.onlineSynced,
+      Icon: CheckCircle,
       bgColor: 'bg-green-50',
       borderColor: 'border-green-300',
-      textColor: 'text-green-800'
+      textColor: 'text-green-800',
+      iconColor: 'text-green-600'
     };
   }
 
   if (isSyncing) {
     status = {
-      icon: '🔄',
+      Icon: ArrowsClockwise,
       label: 'Syncing...',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-300',
-      textColor: 'text-blue-800'
+      textColor: 'text-blue-800',
+      iconColor: 'text-blue-600'
     };
   }
+
+  const IconComponent = status.Icon;
 
   return (
     <button
@@ -56,7 +66,7 @@ const SyncStatusIndicator = () => {
       `}
       title="Click to view sync details"
     >
-      <span className="text-base">{status.icon}</span>
+      <IconComponent size={20} weight="bold" className={status.iconColor} />
       <span className="hidden sm:inline">{status.label}</span>
       <span className="sm:hidden">{pendingCount > 0 ? pendingCount : status.icon}</span>
     </button>

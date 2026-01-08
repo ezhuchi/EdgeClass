@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BookOpen, Users, CheckCircle, Clock, CalendarBlank, MagnifyingGlass, X, ChartBar, Trash, NotePencil } from '@phosphor-icons/react';
 import { getQuizzes, deleteQuiz } from '../db/quizzes';
 import { getAllAttempts } from '../db/attempts';
 import { getCurrentUser } from '../db';
@@ -128,7 +129,7 @@ const TeacherDashboard = () => {
               <p className="text-sm text-purple-800 font-medium">{copy.teacherDashboard.stats.myQuizzes}</p>
               <p className="text-3xl font-bold text-purple-600">{quizzes.length}</p>
             </div>
-            <div className="text-4xl">📚</div>
+            <BookOpen size={40} weight="duotone" className="text-purple-600" />
           </div>
         </div>
 
@@ -138,7 +139,7 @@ const TeacherDashboard = () => {
               <p className="text-sm text-blue-800 font-medium">{copy.teacherDashboard.stats.totalStudents}</p>
               <p className="text-3xl font-bold text-blue-600">{totalStudents}</p>
             </div>
-            <div className="text-4xl">👥</div>
+            <Users size={40} weight="duotone" className="text-blue-600" />
           </div>
         </div>
 
@@ -148,7 +149,7 @@ const TeacherDashboard = () => {
               <p className="text-sm text-green-800 font-medium">{copy.teacherDashboard.stats.totalAttempts}</p>
               <p className="text-3xl font-bold text-green-600">{allAttempts.length}</p>
             </div>
-            <div className="text-4xl">✅</div>
+            <CheckCircle size={40} weight="duotone" className="text-green-600" />
           </div>
         </div>
 
@@ -158,7 +159,7 @@ const TeacherDashboard = () => {
               <p className="text-sm text-yellow-800 font-medium">{copy.syncPage.stats.pending}</p>
               <p className="text-3xl font-bold text-yellow-600">{syncStats.pending}</p>
             </div>
-            <div className="text-4xl">⏳</div>
+            <Clock size={40} weight="duotone" className="text-yellow-600" />
           </div>
         </div>
       </div>
@@ -218,13 +219,13 @@ const TeacherDashboard = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            <MagnifyingGlass size={20} className="absolute left-3 top-2.5 text-gray-400" />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
               >
-                ✕
+                <X size={20} />
               </button>
             )}
           </div>
@@ -250,7 +251,7 @@ const TeacherDashboard = () => {
             <div className="col-span-full">
               {searchTerm ? (
                 <EmptyState
-                  icon="🔍"
+                  icon={MagnifyingGlass}
                   title={copy.teacherDashboard.emptyStates.noSearchResults}
                   description={copy.teacherDashboard.emptyStates.tryDifferentSearch}
                   action={{
@@ -260,7 +261,7 @@ const TeacherDashboard = () => {
                 />
               ) : (
                 <EmptyState
-                  icon="📝"
+                  icon={NotePencil}
                   title={copy.teacherDashboard.emptyStates.noQuizzes}
                   description={copy.teacherDashboard.emptyStates.noQuizzesDescription}
                   action={{
@@ -284,7 +285,8 @@ const TeacherDashboard = () => {
                   </div>
                   
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                    <span>📅 {new Date(quiz.createdAt).toLocaleDateString()}</span>
+                    <CalendarBlank size={16} className="text-gray-500" />
+                    <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
                     <span>•</span>
                     <span>{attempts.length} attempts</span>
                   </div>
@@ -292,15 +294,16 @@ const TeacherDashboard = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleViewAttempts(quiz.id)}
-                      className="btn btn-secondary flex-1 text-sm"
+                      className="btn btn-secondary flex-1 text-sm flex items-center justify-center gap-2"
                     >
-                      📊 View Attempts
+                      <ChartBar size={16} />
+                      View Attempts
                     </button>
                     <button
                       onClick={() => handleDeleteQuiz(quiz.id)}
                       className="btn bg-red-500 text-white hover:bg-red-600 px-4 text-sm"
                     >
-                      🗑️
+                      <Trash size={16} />
                     </button>
                   </div>
                 </div>
@@ -333,7 +336,7 @@ const TeacherDashboard = () => {
 
           {quizAttempts.length === 0 ? (
             <EmptyState
-              icon="📊"
+              icon={ChartBar}
               title={copy.teacherDashboard.emptyStates.noAttempts}
               description={
                 selectedQuiz 
