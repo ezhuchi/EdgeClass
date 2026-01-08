@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../db/users';
+import { copy } from '../constants/copy';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -15,19 +16,19 @@ const Login = () => {
     
     const trimmedUsername = username.trim();
     
-    // Validation
+    //Validation
     if (!trimmedUsername) {
-      setError('Please enter a username');
+      setError(copy.login.errors.emptyUsername);
       return;
     }
     
     if (trimmedUsername.length < 3) {
-      setError('Username must be at least 3 characters');
+      setError(copy.login.errors.shortUsername);
       return;
     }
     
     if (trimmedUsername.length > 20) {
-      setError('Username must be less than 20 characters');
+      setError(copy.login.errors.longUsername);
       return;
     }
 
@@ -50,22 +51,22 @@ const Login = () => {
       <div className="max-w-md w-full">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-block text-8xl mb-4">�</div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Edge Class</h1>
-          <p className="text-gray-600 text-lg">Teach even when the internet ghosts you</p>
+          <div className="inline-block text-8xl mb-4">🌾</div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{copy.appName}</h1>
+          <p className="text-gray-600 text-lg">{copy.tagline}</p>
         </div>
 
         {/* Login Card */}
         <div className="card">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Welcome Back
+            {copy.login.title}
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Role Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                I am a...
+                {copy.login.roleLabel}
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -78,7 +79,7 @@ const Login = () => {
                   }`}
                 >
                   <div className="text-3xl mb-1">🎓</div>
-                  <div className="font-semibold">Student</div>
+                  <div className="font-semibold">{copy.login.studentRole}</div>
                   <div className="text-xs mt-1 opacity-75">Take quizzes</div>
                 </button>
                 <button
@@ -91,7 +92,7 @@ const Login = () => {
                   }`}
                 >
                   <div className="text-3xl mb-1">👨‍🏫</div>
-                  <div className="font-semibold">Teacher</div>
+                  <div className="font-semibold">{copy.login.teacherRole}</div>
                   <div className="text-xs mt-1 opacity-75">Create quizzes</div>
                 </button>
               </div>
@@ -99,7 +100,7 @@ const Login = () => {
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+                {copy.login.usernameLabel}
               </label>
               <input
                 id="username"
@@ -109,9 +110,8 @@ const Login = () => {
                   setUsername(e.target.value);
                   setError(''); // Clear error on input
                 }}
-                placeholder="e.g., john_doe or teacher_maya"
-                className={`input ${
-                  error ? 'border-red-500 focus:ring-red-500' : ''
+                placeholder={copy.login.usernamePlaceholder}
+                className={`input ${ error ? 'border-red-500 focus:ring-red-500' : ''
                 }`}
                 required
                 autoFocus
@@ -125,7 +125,7 @@ const Login = () => {
                 </p>
               )}
               <p className="mt-1.5 text-xs text-gray-500">
-                💡 Choose any username (3-20 characters). It's saved locally.
+                {copy.login.usernameHint}
               </p>
             </div>
 
@@ -134,16 +134,16 @@ const Login = () => {
               disabled={loading || !username.trim()}
               className="btn btn-primary w-full disabled:opacity-50"
             >
-              {loading ? 'Logging in...' : `Login as ${role === 'teacher' ? 'Teacher' : 'Student'}`}
+              {loading ? 'Logging in...' : role === 'teacher' ? copy.login.teacherCTA : copy.login.studentCTA}
             </button>
           </form>
 
           {/* Offline Notice */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
-              <strong>✨ Works Offline!</strong>
+              <strong>{copy.login.offlineNotice}</strong>
               <br />
-              Your login is saved locally. No internet required after first login.
+              {copy.login.offlineDescription}
             </p>
           </div>
         </div>

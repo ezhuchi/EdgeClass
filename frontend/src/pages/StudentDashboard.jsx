@@ -5,7 +5,9 @@ import { getAllAttempts } from '../db/attempts';
 import { getCurrentUser } from '../db';
 import db from '../db';
 import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
 import { useSyncStatus } from '../sync/useSyncStatus';
+import { copy } from '../constants/copy';
 
 const StudentDashboard = () => {
   const [availableQuizzes, setAvailableQuizzes] = useState([]);
@@ -99,7 +101,7 @@ const StudentDashboard = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading student dashboard..." />;
+    return <LoadingSpinner message={copy.studentDashboard.loading} />;
   }
 
   // Calculate average score
@@ -115,10 +117,10 @@ const StudentDashboard = () => {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">
-          Welcome, {user?.username}!
+          {copy.studentDashboard.welcomeMessage(user?.username)}
         </h1>
         <p className="text-blue-100">
-          Take quizzes and track your progress. Everything works offline!
+          {copy.studentDashboard.description}
         </p>
       </div>
 
@@ -127,7 +129,7 @@ const StudentDashboard = () => {
         <div className="card bg-blue-50 border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-800 font-medium">Available Quizzes</p>
+              <p className="text-sm text-blue-800 font-medium">{copy.studentDashboard.stats.available}</p>
               <p className="text-3xl font-bold text-blue-600">{availableQuizzes.length}</p>
             </div>
             <div className="text-4xl">📚</div>
@@ -137,7 +139,7 @@ const StudentDashboard = () => {
         <div className="card bg-green-50 border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-800 font-medium">Completed</p>
+              <p className="text-sm text-green-800 font-medium">{copy.studentDashboard.stats.completed}</p>
               <p className="text-3xl font-bold text-green-600">{myAttempts.length}</p>
             </div>
             <div className="text-4xl">✅</div>
@@ -147,7 +149,7 @@ const StudentDashboard = () => {
         <div className="card bg-purple-50 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-800 font-medium">Avg Score</p>
+              <p className="text-sm text-purple-800 font-medium">{copy.studentDashboard.stats.avgScore}</p>
               <p className="text-3xl font-bold text-purple-600">{avgScore}%</p>
             </div>
             <div className="text-4xl">🎯</div>
@@ -157,7 +159,7 @@ const StudentDashboard = () => {
         <div className="card bg-yellow-50 border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-yellow-800 font-medium">Pending Sync</p>
+              <p className="text-sm text-yellow-800 font-medium">{copy.syncPage.stats.pending}</p>
               <p className="text-3xl font-bold text-yellow-600">{syncStats.pending}</p>
             </div>
             <div className="text-4xl">⏳</div>
@@ -176,7 +178,7 @@ const StudentDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Available Quizzes ({filteredQuizzes.length})
+            {copy.studentDashboard.tabs.available} ({filteredQuizzes.length})
           </button>
           <button
             onClick={() => setView('scores')}
@@ -186,7 +188,7 @@ const StudentDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            My Scores ({filteredAttempts.length})
+            {copy.studentDashboard.tabs.scores} ({filteredAttempts.length})
           </button>
         </div>
 
@@ -195,7 +197,7 @@ const StudentDashboard = () => {
           <div className="relative flex-1 sm:w-64">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={copy.common.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -229,33 +231,23 @@ const StudentDashboard = () => {
       {view === 'quizzes' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredQuizzes.length === 0 ? (
-            <div className="col-span-full text-center py-12">
+            <div className="col-span-full">
               {searchTerm ? (
-                <>
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quizzes found
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Try a different search term
-                  </p>
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="btn btn-secondary"
-                  >
-                    Clear Search
-                  </button>
-                </>
+                <EmptyState
+                  icon="🔍"
+                  title={copy.studentDashboard.emptyStates.noSearchResults}
+                  description={copy.studentDashboard.emptyStates.tryDifferentSearch}
+                  action={{
+                    label: copy.common.clearSearch,
+                    onClick: () => setSearchTerm('')
+                  }}
+                />
               ) : (
-                <>
-                  <div className="text-6xl mb-4">📚</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quizzes available yet
-                  </h3>
-                  <p className="text-gray-600">
-                    Your teachers haven't created any quizzes yet. Check back later!
-                  </p>
-                </>
+                <EmptyState
+                  icon="📚"
+                  title={copy.studentDashboard.emptyStates.noQuizzes}
+                  description={copy.studentDashboard.emptyStates.noQuizzesDescription}
+                />
               )}
             </div>
           ) : (
@@ -298,7 +290,7 @@ const StudentDashboard = () => {
                     onClick={() => handleTakeQuiz(quiz)}
                     className="btn btn-primary w-full"
                   >
-                    {attempted ? 'Retake Quiz' : 'Take Quiz'}
+                    {attempted ? copy.studentDashboard.retakeQuiz : copy.studentDashboard.takeQuiz}
                   </button>
                 </div>
               );
@@ -308,41 +300,27 @@ const StudentDashboard = () => {
       ) : (
         <div className="space-y-3">
           {filteredAttempts.length === 0 ? (
-            <div className="text-center py-12">
-              {searchTerm ? (
-                <>
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No scores found
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Try a different search term
-                  </p>
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="btn btn-secondary"
-                  >
-                    Clear Search
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="text-6xl mb-4">🎯</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quiz attempts yet
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Take a quiz to see your scores here
-                  </p>
-                  <button
-                    onClick={() => setView('quizzes')}
-                    className="btn btn-primary"
-                  >
-                    Browse Quizzes
-                  </button>
-                </>
-              )}
-            </div>
+            searchTerm ? (
+              <EmptyState
+                icon="🔍"
+                title={copy.studentDashboard.emptyStates.noSearchResults}
+                description={copy.studentDashboard.emptyStates.tryDifferentSearch}
+                action={{
+                  label: copy.common.clearSearch,
+                  onClick: () => setSearchTerm('')
+                }}
+              />
+            ) : (
+              <EmptyState
+                icon="🎯"
+                title={copy.studentDashboard.emptyStates.noAttempts}
+                description={copy.studentDashboard.emptyStates.noAttemptsDescription}
+                action={{
+                  label: copy.studentDashboard.browseQuizzes,
+                  onClick: () => setView('quizzes')
+                }}
+              />
+            )
           ) : (
             filteredAttempts.map((attempt) => {
               const quiz = availableQuizzes.find((q) => q.id === attempt.quizId);

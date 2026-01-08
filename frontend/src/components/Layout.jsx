@@ -1,9 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import OfflineBadge from './OfflineBadge';
+import SyncStatusIndicator from './SyncStatusIndicator';
+import OnboardingModal from './OnboardingModal';
 import { getCurrentUser, clearCurrentUser } from '../db';
 import { useNavigate } from 'react-router-dom';
 import { networkDetector } from '../utils/networkDetector';
+import { copy } from '../constants/copy';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -91,24 +94,14 @@ const Layout = ({ children }) => {
             </nav>
 
             {/* Right side */}
-            <div className="flex items-center gap-4">
-              {/* Lite Mode Toggle */}
-              <button
-                onClick={toggleLiteMode}
-                className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  isLiteMode
-                    ? 'bg-orange-100 text-orange-800 border border-orange-300'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300'
-                }`}
-                title={`${isLiteMode ? 'Disable' : 'Enable'} Lite Mode (data saver)`}
-              >
-                <span className="text-base">{isLiteMode ? '🐢' : '🚀'}</span>
-                <span>
-                  {isLiteMode ? 'Lite Mode' : networkInfo.effectiveType.toUpperCase()}
-                </span>
-              </button>
+            <div className="flex items-center gap-3">
+              {/* Sync Status Indicator */}
+              <SyncStatusIndicator />
 
-              <OfflineBadge />
+              {/* Network Info Tooltip */}
+              <div className="hidden lg:block text-xs text-gray-600">
+                {copy.networkInfo[networkInfo.effectiveType] || networkInfo.effectiveType}
+              </div>
               
               {user && (
                 <div className="flex items-center gap-3">
@@ -120,7 +113,7 @@ const Layout = ({ children }) => {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="text-sm text-gray-600 hover:text-gray-900"
+                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     Logout
                   </button>
@@ -136,13 +129,16 @@ const Layout = ({ children }) => {
         {children}
       </main>
 
+      {/* Onboarding Modal */}
+      <OnboardingModal />
+
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center text-sm text-gray-600">
-            <p>� Edge Class - Built for offline-first education</p>
+            <p>🌾 {copy.appName} - Built for offline-first education</p>
             <p className="text-xs text-gray-500 mt-1">
-              "Teach even when the internet ghosts you"
+              "{copy.tagline}"
             </p>
           </div>
         </div>

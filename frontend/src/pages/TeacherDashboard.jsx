@@ -6,7 +6,9 @@ import { getCurrentUser } from '../db';
 import db from '../db';
 import QuizCard from '../components/QuizCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
 import { useSyncStatus } from '../sync/useSyncStatus';
+import { copy } from '../constants/copy';
 
 const TeacherDashboard = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -98,7 +100,7 @@ const TeacherDashboard = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading teacher dashboard..." />;
+    return <LoadingSpinner message={copy.teacherDashboard.loading} />;
   }
 
   // Get quiz-specific stats
@@ -111,10 +113,10 @@ const TeacherDashboard = () => {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">
-          👨‍🏫 Teacher Dashboard - Welcome, {user?.username}!
+          {copy.teacherDashboard.welcomeMessage(user?.username)}
         </h1>
         <p className="text-purple-100">
-          Create and manage quizzes. View student performance even offline.
+          {copy.teacherDashboard.description}
         </p>
       </div>
 
@@ -123,7 +125,7 @@ const TeacherDashboard = () => {
         <div className="card bg-purple-50 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-800 font-medium">My Quizzes</p>
+              <p className="text-sm text-purple-800 font-medium">{copy.teacherDashboard.stats.myQuizzes}</p>
               <p className="text-3xl font-bold text-purple-600">{quizzes.length}</p>
             </div>
             <div className="text-4xl">📚</div>
@@ -133,7 +135,7 @@ const TeacherDashboard = () => {
         <div className="card bg-blue-50 border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-800 font-medium">Total Students</p>
+              <p className="text-sm text-blue-800 font-medium">{copy.teacherDashboard.stats.totalStudents}</p>
               <p className="text-3xl font-bold text-blue-600">{totalStudents}</p>
             </div>
             <div className="text-4xl">👥</div>
@@ -143,7 +145,7 @@ const TeacherDashboard = () => {
         <div className="card bg-green-50 border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-800 font-medium">Total Attempts</p>
+              <p className="text-sm text-green-800 font-medium">{copy.teacherDashboard.stats.totalAttempts}</p>
               <p className="text-3xl font-bold text-green-600">{allAttempts.length}</p>
             </div>
             <div className="text-4xl">✅</div>
@@ -153,7 +155,7 @@ const TeacherDashboard = () => {
         <div className="card bg-yellow-50 border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-yellow-800 font-medium">Pending Sync</p>
+              <p className="text-sm text-yellow-800 font-medium">{copy.syncPage.stats.pending}</p>
               <p className="text-3xl font-bold text-yellow-600">{syncStats.pending}</p>
             </div>
             <div className="text-4xl">⏳</div>
@@ -166,17 +168,17 @@ const TeacherDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Ready to create a new quiz?
+              {copy.teacherDashboard.createPanel.title}
             </h3>
             <p className="text-sm text-gray-600">
-              Build engaging quizzes that work offline for your students
+              {copy.teacherDashboard.createPanel.description}
             </p>
           </div>
           <button
             onClick={() => navigate('/create-quiz')}
             className="btn btn-primary"
           >
-            Create Quiz
+            {copy.teacherDashboard.createQuiz}
           </button>
         </div>
       </div>
@@ -192,7 +194,7 @@ const TeacherDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            My Quizzes ({filteredQuizzes.length})
+            {copy.teacherDashboard.tabs.myQuizzes} ({filteredQuizzes.length})
           </button>
           <button
             onClick={() => setView('attempts')}
@@ -202,7 +204,7 @@ const TeacherDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            📊 Student Attempts ({quizAttempts.length})
+            {copy.teacherDashboard.tabs.attempts} ({quizAttempts.length})
           </button>
         </div>
 
@@ -211,7 +213,7 @@ const TeacherDashboard = () => {
           <div className="relative flex-1 sm:w-64">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={copy.common.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -245,39 +247,28 @@ const TeacherDashboard = () => {
       {view === 'quizzes' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredQuizzes.length === 0 ? (
-            <div className="col-span-full text-center py-12">
+            <div className="col-span-full">
               {searchTerm ? (
-                <>
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quizzes found
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Try a different search term
-                  </p>
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="btn btn-secondary"
-                  >
-                    Clear Search
-                  </button>
-                </>
+                <EmptyState
+                  icon="🔍"
+                  title={copy.teacherDashboard.emptyStates.noSearchResults}
+                  description={copy.teacherDashboard.emptyStates.tryDifferentSearch}
+                  action={{
+                    label: copy.common.clearSearch,
+                    onClick: () => setSearchTerm('')
+                  }}
+                />
               ) : (
-                <>
-                  <div className="text-6xl mb-4">📝</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quizzes yet
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Create your first quiz to get started
-                  </p>
-                  <button
-                    onClick={() => navigate('/create-quiz')}
-                    className="btn btn-primary"
-                  >
-                    Create Quiz
-                  </button>
-                </>
+                <EmptyState
+                  icon="📝"
+                  title={copy.teacherDashboard.emptyStates.noQuizzes}
+                  description={copy.teacherDashboard.emptyStates.noQuizzesDescription}
+                  action={{
+                    label: copy.teacherDashboard.createQuiz,
+                    onClick: () => navigate('/create-quiz'),
+                    primary: true
+                  }}
+                />
               )}
             </div>
           ) : (
@@ -341,17 +332,15 @@ const TeacherDashboard = () => {
           )}
 
           {quizAttempts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No attempts yet
-              </h3>
-              <p className="text-gray-600">
-                {selectedQuiz 
-                  ? 'No students have attempted this quiz yet' 
-                  : 'Students haven\'t taken any quizzes yet'}
-              </p>
-            </div>
+            <EmptyState
+              icon="📊"
+              title={copy.teacherDashboard.emptyStates.noAttempts}
+              description={
+                selectedQuiz 
+                  ? copy.teacherDashboard.emptyStates.noAttemptsForQuiz
+                  : copy.teacherDashboard.emptyStates.noAttemptsDescription
+              }
+            />
           ) : (
             <div className="space-y-3">
               {quizAttempts.map((attempt) => {
@@ -388,7 +377,7 @@ const TeacherDashboard = () => {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {attempt.syncStatus === 'synced' ? 'Synced' : '⏳ Pending'}
+                        {attempt.syncStatus === 'synced' ? copy.syncPage.synced : copy.syncPage.stats.pending}
                       </div>
                     </div>
                   </div>
