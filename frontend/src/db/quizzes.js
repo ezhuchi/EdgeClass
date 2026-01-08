@@ -20,8 +20,9 @@ export const createQuiz = async (quizData) => {
   await db.quizzes.add(quiz);
   
   // Add questions
+  let questions = [];
   if (quizData.questions && quizData.questions.length > 0) {
-    const questions = quizData.questions.map((q, index) => ({
+    questions = quizData.questions.map((q, index) => ({
       id: `question_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
       quizId: quiz.id,
       question: q.question,
@@ -33,8 +34,16 @@ export const createQuiz = async (quizData) => {
     await db.questions.bulkAdd(questions);
   }
   
-  // Queue for sync
+  // Queue quiz for sync
   await queueSync('POST', '/api/quizzes', quiz);
+  
+  // Queue questions for sync (critical fix)
+  if (questions.length > 0) {
+    await queueSync('POST', '/api/questions', { 
+      questions,
+      deviceId: quiz.deviceId 
+    });
+  }
   
   return quiz;
 };
