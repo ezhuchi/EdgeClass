@@ -7,7 +7,7 @@ export class GhostClassDB extends Dexie {
     
     this.version(1).stores({
       // User authentication (offline-capable)
-      users: 'id, deviceId, username, createdAt',
+      users: 'id, deviceId, username, role, createdAt',
       
       // Quizzes stored locally
       quizzes: 'id, title, createdBy, createdAt, syncStatus, updatedAt',

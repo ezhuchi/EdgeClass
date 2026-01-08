@@ -5,6 +5,11 @@ export const submitAttempt = async (quizId, answers) => {
   const user = getCurrentUser();
   const deviceId = getDeviceId();
   
+  // Only students can submit quiz attempts
+  if (!user || user.role !== 'student') {
+    throw new Error('Only students can submit quiz attempts');
+  }
+  
   // Calculate score
   const quiz = await db.quizzes.get(quizId);
   const questions = await db.questions
@@ -22,7 +27,7 @@ export const submitAttempt = async (quizId, answers) => {
   const attempt = {
     id: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     quizId,
-    userId: user?.id || 'anonymous',
+    userId: user.id,
     answers: JSON.stringify(answers),
     score,
     totalQuestions: questions.length,

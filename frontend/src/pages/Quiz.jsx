@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizById } from '../db/quizzes';
 import { submitAttempt } from '../db/attempts';
+import { getCurrentUser } from '../db';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Quiz = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = getCurrentUser();
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -15,18 +17,37 @@ const Quiz = () => {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
+    // Only students can take quizzes
+    if (!user || user.role !== 'student') {
+      alert('Only students can take quizzes.');
+      navigate('/dashboard');
+      return;
+    }
     loadQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadQuiz = async () => {
     setLoading(true);
     try {
+      console.log('Loading quiz with ID:', id);
       const quizData = await getQuizById(id);
+      console.log('Quiz data loaded:', quizData);
+      
       if (!quizData) {
+        console.error('Quiz not found in database');
         alert('Quiz not found');
         navigate('/dashboard');
         return;
       }
+      
+      if (!quizData.questions || quizData.questions.length === 0) {
+        console.error('Quiz has no questions');
+        alert('This quiz has no questions');
+        navigate('/dashboard');
+        return;
+      }
+      
       setQuiz(quizData);
       setAnswers(new Array(quizData.questions.length).fill(''));
     } catch (error) {

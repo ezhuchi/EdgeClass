@@ -38,6 +38,7 @@ export const initDatabase = () => {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
+      role TEXT NOT NULL CHECK(role IN ('teacher', 'student')),
       deviceId TEXT NOT NULL,
       createdAt TEXT NOT NULL,
       syncedAt TEXT DEFAULT CURRENT_TIMESTAMP

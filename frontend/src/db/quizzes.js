@@ -6,11 +6,16 @@ export const createQuiz = async (quizData) => {
   const user = getCurrentUser();
   const deviceId = getDeviceId();
   
+  // Only teachers can create quizzes
+  if (!user || user.role !== 'teacher') {
+    throw new Error('Only teachers can create quizzes');
+  }
+  
   const quiz = {
     id: `quiz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     title: quizData.title,
     description: quizData.description || '',
-    createdBy: user?.id || 'anonymous',
+    createdBy: user.id,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     syncStatus: 'pending',
@@ -53,13 +58,21 @@ export const getQuizzes = async () => {
 };
 
 export const getQuizById = async (id) => {
+  console.log('getQuizById called with id:', id);
   const quiz = await db.quizzes.get(id);
-  if (!quiz) return null;
+  console.log('Quiz from DB:', quiz);
+  
+  if (!quiz) {
+    console.error('Quiz not found in IndexedDB');
+    return null;
+  }
   
   const questions = await db.questions
     .where('quizId')
     .equals(id)
     .sortBy('order');
+  
+  console.log('Questions from DB:', questions);
   
   return {
     ...quiz,

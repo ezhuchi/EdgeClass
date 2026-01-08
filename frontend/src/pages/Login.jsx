@@ -4,6 +4,7 @@ import { loginUser } from '../db/users';
 
 const Login = () => {
   const [username, setUsername] = useState('');
+  const [role, setRole] = useState('student'); // Default to student
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -13,7 +14,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      await loginUser(username.trim());
+      await loginUser(username.trim(), role);
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -40,6 +41,41 @@ const Login = () => {
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {/* Role Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                I am a...
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRole('student')}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    role === 'student'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-1">🎓</div>
+                  <div className="font-semibold">Student</div>
+                  <div className="text-xs mt-1 opacity-75">Take quizzes</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('teacher')}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    role === 'teacher'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-1">👨‍🏫</div>
+                  <div className="font-semibold">Teacher</div>
+                  <div className="text-xs mt-1 opacity-75">Create quizzes</div>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 Username
@@ -61,7 +97,7 @@ const Login = () => {
               disabled={loading || !username.trim()}
               className="btn btn-primary w-full disabled:opacity-50"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Logging in...' : `Login as ${role === 'teacher' ? 'Teacher' : 'Student'}`}
             </button>
           </form>
 

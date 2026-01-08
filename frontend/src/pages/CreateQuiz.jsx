@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createQuiz } from '../db/quizzes';
+import { getCurrentUser } from '../db';
 
 const CreateQuiz = () => {
   const [title, setTitle] = useState('');
@@ -10,6 +11,15 @@ const CreateQuiz = () => {
   ]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const user = getCurrentUser();
+  
+  // Verify user is a teacher
+  useEffect(() => {
+    if (!user || user.role !== 'teacher') {
+      alert('Access denied. Only teachers can create quizzes.');
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const addQuestion = () => {
     setQuestions([

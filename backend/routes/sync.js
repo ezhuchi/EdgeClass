@@ -13,15 +13,15 @@ const router = express.Router();
 // Sync users
 router.post('/users', validateBody(userSchema), (req, res) => {
   try {
-    const { id, username, deviceId, createdAt } = req.validatedBody;
+    const { id, username, role, deviceId, createdAt } = req.validatedBody;
     const db = getDB();
 
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO users (id, username, deviceId, createdAt, syncedAt)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT OR REPLACE INTO users (id, username, role, deviceId, createdAt, syncedAt)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `);
 
-    stmt.run(id, username, deviceId, createdAt);
+    stmt.run(id, username, role, deviceId, createdAt);
 
     // Log sync
     logSync(db, deviceId, 'user', id, 'sync');
@@ -45,6 +45,15 @@ router.post('/quizzes', validateBody(quizSchema), (req, res) => {
   try {
     const { id, title, description, createdBy, createdAt, updatedAt, deviceId } = req.validatedBody;
     const db = getDB();
+
+    // Role-based validation: Only teachers can create quizzes
+    const creator = db.prepare('SELECT role FROM users WHERE id = ?').get(createdBy);
+    if (creator && creator.role !== 'teacher') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only teachers can create quizzes'
+      });
+    }
 
     // Check for conflicts (latest timestamp wins)
     const existing = db.prepare('SELECT updatedAt FROM quizzes WHERE id = ?').get(id);

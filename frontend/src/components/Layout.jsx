@@ -66,16 +66,18 @@ const Layout = ({ children }) => {
               >
                 Dashboard
               </Link>
-              <Link
-                to="/create-quiz"
-                className={`text-sm font-medium transition-colors ${
-                  isActive('/create-quiz')
-                    ? 'text-primary-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Create Quiz
-              </Link>
+              {user?.role === 'teacher' && (
+                <Link
+                  to="/create-quiz"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/create-quiz')
+                      ? 'text-primary-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Create Quiz
+                </Link>
+              )}
               <Link
                 to="/sync"
                 className={`text-sm font-medium transition-colors ${
@@ -112,7 +114,9 @@ const Layout = ({ children }) => {
                 <div className="flex items-center gap-3">
                   <div className="text-right hidden sm:block">
                     <p className="text-sm font-medium text-gray-900">{user.username}</p>
-                    <p className="text-xs text-gray-500">Student</p>
+                    <p className="text-xs text-gray-500">
+                      {user.role === 'teacher' ? '👨‍🏫 Teacher' : '🎓 Student'}
+                    </p>
                   </div>
                   <button
                     onClick={handleLogout}

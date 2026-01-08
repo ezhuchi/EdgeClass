@@ -1,7 +1,7 @@
 import db, { getDeviceId, setCurrentUser } from './index';
 
 // Offline-capable login
-export const loginUser = async (username) => {
+export const loginUser = async (username, role) => {
   const deviceId = getDeviceId();
   
   // Check if user exists locally
@@ -15,12 +15,19 @@ export const loginUser = async (username) => {
     user = {
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       username,
+      role, // teacher or student
       deviceId,
       createdAt: new Date().toISOString(),
       syncStatus: 'pending'
     };
     
     await db.users.add(user);
+  } else {
+    // Update role if changed
+    if (user.role !== role) {
+      await db.users.update(user.id, { role });
+      user.role = role;
+    }
   }
   
   // Always queue for sync (critical fix: ensure user exists on backend even if exists locally)

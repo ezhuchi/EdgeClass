@@ -4,6 +4,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import CreateQuiz from './pages/CreateQuiz';
 import Quiz from './pages/Quiz';
 import SyncPage from './pages/SyncPage';
@@ -12,6 +14,41 @@ import SyncPage from './pages/SyncPage';
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
   return user ? children : <Navigate to="/login" replace />;
+};
+
+// Teacher-Only Route Component
+const TeacherRoute = ({ children }) => {
+  const user = getCurrentUser();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'teacher') {
+    alert('Access denied. Only teachers can access this page.');
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
+// Student-Only Route Component
+const StudentRoute = ({ children }) => {
+  const user = getCurrentUser();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'student') {
+    alert('Access denied. Only students can take quizzes.');
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
+// Role-Based Dashboard Component
+const RoleDashboard = () => {
+  const user = getCurrentUser();
+  if (!user) return <Navigate to="/login" replace />;
+  
+  // Route based on user role
+  if (user.role === 'teacher') {
+    return <TeacherDashboard />;
+  } else {
+    return <StudentDashboard />;
+  }
 };
 
 function App() {
@@ -28,7 +65,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  <Dashboard />
+                  <RoleDashboard />
                 </Layout>
               </ProtectedRoute>
             }
@@ -36,21 +73,21 @@ function App() {
           <Route
             path="/create-quiz"
             element={
-              <ProtectedRoute>
+              <TeacherRoute>
                 <Layout>
                   <CreateQuiz />
                 </Layout>
-              </ProtectedRoute>
+              </TeacherRoute>
             }
           />
           <Route
             path="/quiz/:id"
             element={
-              <ProtectedRoute>
+              <StudentRoute>
                 <Layout>
                   <Quiz />
                 </Layout>
-              </ProtectedRoute>
+              </StudentRoute>
             }
           />
           <Route

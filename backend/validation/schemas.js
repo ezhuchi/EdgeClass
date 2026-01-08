@@ -7,6 +7,9 @@ export const userSchema = z.object({
     .min(2, 'Username must be at least 2 characters')
     .max(50, 'Username must be less than 50 characters')
     .trim(),
+  role: z.enum(['teacher', 'student'], {
+    errorMap: () => ({ message: 'Role must be either teacher or student' })
+  }),
   deviceId: z.string().min(1, 'Device ID is required'),
   createdAt: z.string().datetime()
 });
