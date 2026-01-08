@@ -29,8 +29,8 @@ const Login = () => {
       <div className="max-w-md w-full">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-block text-8xl mb-4">👻</div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">GhostClass</h1>
+          <div className="inline-block text-8xl mb-4">�</div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Edge Class</h1>
           <p className="text-gray-600 text-lg">Teach even when the internet ghosts you</p>
         </div>
 

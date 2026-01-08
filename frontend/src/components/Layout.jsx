@@ -47,9 +47,9 @@ const Layout = ({ children }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2">
-              <span className="text-3xl">👻</span>
+              <span className="text-3xl">�</span>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">GhostClass</h1>
+                <h1 className="text-xl font-bold text-gray-900">Edge Class</h1>
                 <p className="text-xs text-gray-500">Offline-First Education</p>
               </div>
             </Link>
@@ -140,7 +140,7 @@ const Layout = ({ children }) => {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center text-sm text-gray-600">
-            <p>👻 GhostClass - Built for offline-first education</p>
+            <p>� Edge Class - Built for offline-first education</p>
             <p className="text-xs text-gray-500 mt-1">
               "Teach even when the internet ghosts you"
             </p>

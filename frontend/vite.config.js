@@ -15,8 +15,8 @@ export default defineConfig({  server: {
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'GhostClass - Offline-First Education',
-        short_name: 'GhostClass',
+        name: 'Edge Class - Offline-First Education',
+        short_name: 'Edge Class',
         description: 'Teach even when the internet ghosts you',
         theme_color: '#6366f1',
         background_color: '#ffffff',

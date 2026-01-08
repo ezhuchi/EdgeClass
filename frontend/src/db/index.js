@@ -1,9 +1,9 @@
 import Dexie from 'dexie';
 
-// GhostClass Database - Primary Source of Truth
-export class GhostClassDB extends Dexie {
+// Edge Class Database - Primary Source of Truth
+export class EdgeClassDB extends Dexie {
   constructor() {
-    super('GhostClassDB');
+    super('EdgeClassDB');
     
     this.version(1).stores({
       // User authentication (offline-capable)

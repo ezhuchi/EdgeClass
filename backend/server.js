@@ -35,7 +35,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
-    service: 'GhostClass Sync Server'
+    service: 'Edge Class Sync Server'
   });
 });
 
@@ -60,7 +60,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔════════════════════════════════════════╗
-║   GhostClass Sync Server Running   ║
+║   Edge Class Sync Server Running   ║
 ╠════════════════════════════════════════╣
 ║   Port: ${PORT}                         ║
 ║   Time: ${new Date().toLocaleString()}  

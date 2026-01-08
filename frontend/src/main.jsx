@@ -33,7 +33,7 @@ window.addEventListener('offline', () => {
 // Log app startup
 console.log(`
 ╔════════════════════════════════════════╗
-║      👻 GhostClass - Client Ready     ║
+║      � Edge Class - Client Ready     ║
 ╠════════════════════════════════════════╣
 ║   Mode: ${import.meta.env.MODE}                    ║
 ║   PWA:  ${('serviceWorker' in navigator) ? 'Supported ✅' : 'Not Supported ❌'}        ║

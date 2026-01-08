@@ -1,4 +1,4 @@
-# GhostClass
+# Edge Class
 
 > **Offline-First PWA for Rural Education** | *"Teach even when the internet ghosts you."*
 
@@ -31,11 +31,21 @@ npm run dev
 
 ---
 
+## Live Deployment
+
+**Frontend (Vercel):** https://edge-class-ndeebiya6-midhunans-projects.vercel.app
+
+**Backend API (Render):** https://edgeclass.onrender.com
+
+---
+
 ## Deploy to Production
 
-Deploy to Render (free tier):
-```bash
-./deploy-reOffline Functionality
+For manual deployment instructions, see [DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)
+
+---
+
+## Offline Functionality
 
 ### Teacher Flow
 1. Login with role "Teacher" (username: any name)

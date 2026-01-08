@@ -11,7 +11,7 @@ class NetworkDetector {
     this.connectionType = 'unknown';
     this.effectiveType = '4g'; // Default to 4g
     this.downlink = null;
-    this.isLiteMode = localStorage.getItem('ghostclass_lite_mode') === 'true';
+    this.isLiteMode = localStorage.getItem('edgeclass_lite_mode') === 'true';
     
     this.init();
   }
@@ -149,7 +149,7 @@ class NetworkDetector {
   // Toggle lite mode (manual override)
   toggleLiteMode() {
     this.isLiteMode = !this.isLiteMode;
-    localStorage.setItem('ghostclass_lite_mode', this.isLiteMode);
+    localStorage.setItem('edgeclass_lite_mode', this.isLiteMode);
     this.notifyListeners();
     return this.isLiteMode;
   }
