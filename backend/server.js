@@ -1,15 +1,28 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDatabase } from './db/init.js';
 import syncRoutes from './routes/sync.js';
 import statsRoutes from './routes/stats.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files in production
+if (isProduction) {
+  const frontendPath = path.join(__dirname, 'public');
+  app.use(express.static(frontendPath));
+  console.log(`📦 Serving static files from: ${frontendPath}`);
+}
 
 // Request logging
 app.use((req, res, next) => {
@@ -33,27 +46,22 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    name: 'GhostClass Sync API',
-    version: '1.0.0',
-    description: 'Offline-first education sync server',
-    endpoints: {
-      health: '/health',
-      sync: '/api/sync/*',
-      stats: '/api/stats'
+// Serve frontend for all non-API routes in production
+if (isProduction) {
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/health')) {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
   });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Not found',
-    path: req.path 
+} else {
+  // 404 handler for development
+  app.use((req, res) => {
+    res.status(404).json({ 
+      error: 'Not found',
+      path: req.path 
+    });
   });
-});
+}
 
 // Error handler
 app.use((err, req, res, next) => {
