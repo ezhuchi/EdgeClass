@@ -1,0 +1,18 @@
+# Render Deployment Configuration
+services:
+  - type: web
+    name: ghostclass
+    env: node
+    buildCommand: |
+      cd frontend && npm install && npm run build
+      cd ../backend && npm install
+      mkdir -p backend/public
+      cp -r frontend/dist/* backend/public/
+    startCommand: cd backend && NODE_ENV=production node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: ghostclass-data
+      mountPath: /app/backend/data
+      sizeGB: 1

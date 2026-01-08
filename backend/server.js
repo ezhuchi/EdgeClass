@@ -21,7 +21,7 @@ app.use(express.json());
 if (isProduction) {
   const frontendPath = path.join(__dirname, 'public');
   app.use(express.static(frontendPath));
-  console.log(`📦 Serving static files from: ${frontendPath}`);
+  console.log(`Serving static files from: ${frontendPath}`);
 }
 
 // Request logging
@@ -75,7 +75,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔════════════════════════════════════════╗
-║   👻 GhostClass Sync Server Running   ║
+║   GhostClass Sync Server Running   ║
 ╠════════════════════════════════════════╣
 ║   Port: ${PORT}                         ║
 ║   Time: ${new Date().toLocaleString()}  

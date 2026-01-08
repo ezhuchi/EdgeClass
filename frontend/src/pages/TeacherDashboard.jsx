@@ -176,7 +176,7 @@ const TeacherDashboard = () => {
             onClick={() => navigate('/create-quiz')}
             className="btn btn-primary"
           >
-            ➕ Create Quiz
+            Create Quiz
           </button>
         </div>
       </div>
@@ -192,7 +192,7 @@ const TeacherDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            📚 My Quizzes ({filteredQuizzes.length})
+            My Quizzes ({filteredQuizzes.length})
           </button>
           <button
             onClick={() => setView('attempts')}
@@ -295,7 +295,7 @@ const TeacherDashboard = () => {
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
                     <span>📅 {new Date(quiz.createdAt).toLocaleDateString()}</span>
                     <span>•</span>
-                    <span>👥 {attempts.length} attempts</span>
+                    <span>{attempts.length} attempts</span>
                   </div>
 
                   <div className="flex gap-2">
@@ -388,7 +388,7 @@ const TeacherDashboard = () => {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {attempt.syncStatus === 'synced' ? '✓ Synced' : '⏳ Pending'}
+                        {attempt.syncStatus === 'synced' ? 'Synced' : '⏳ Pending'}
                       </div>
                     </div>
                   </div>

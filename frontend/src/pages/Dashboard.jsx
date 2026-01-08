@@ -189,7 +189,7 @@ const Dashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            ✅ My Attempts ({filteredAttempts.length})
+            My Attempts ({filteredAttempts.length})
           </button>
         </div>
 
@@ -341,7 +341,7 @@ const Dashboard = () => {
                         ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {attempt.syncStatus === 'synced' ? '✓ Synced' : '⏳ Pending'}
+                      {attempt.syncStatus === 'synced' ? '✓ Synced' : 'Pending'}
                     </div>
                   </div>
                 </div>

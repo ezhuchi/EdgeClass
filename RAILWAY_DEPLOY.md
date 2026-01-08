@@ -1,4 +1,4 @@
-# 🚀 Railway Deployment Guide
+# Railway Deployment Guide
 
 ## Manual Deployment via Railway Website
 
@@ -21,10 +21,10 @@ git push origin main
 ### 3. **Configure Service**
 
 Railway will automatically:
-- ✅ Install dependencies
-- ✅ Build frontend
-- ✅ Copy frontend to backend/public
-- ✅ Start the server
+- Install dependencies
+- Build frontend
+- Copy frontend to backend/public
+- Start the server
 
 ### 4. **Add Environment Variables** (Optional)
 
@@ -107,18 +107,18 @@ Every time you push to GitHub, Railway will automatically:
 ## Monitoring
 
 Railway provides:
-- 📊 **Metrics** → CPU, Memory, Network usage
-- 📝 **Logs** → Real-time application logs
-- 🔔 **Alerts** → Email notifications for crashes
+- **Metrics** → CPU, Memory, Network usage
+- **Logs** → Real-time application logs
+- **Alerts** → Email notifications for crashes
 
 ---
 
 ## Costs
 
 Railway Free Tier includes:
-- ✅ 500 hours/month
-- ✅ 100GB network
-- ✅ Automatic SSL
-- ✅ Persistent storage
+- 500 hours/month
+- 100GB network
+- Automatic SSL
+- Persistent storage
 
 Perfect for MVP and small-scale deployments!

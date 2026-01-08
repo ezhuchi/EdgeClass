@@ -1,4 +1,4 @@
-# 👻 GhostClass
+# GhostClass
 
 > **Offline-First PWA for Rural Education** | *"Teach even when the internet ghosts you."*
 
@@ -6,7 +6,7 @@ An educational platform that works 100% offline and syncs when connectivity retu
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Docker (Recommended)
 ```bash
@@ -35,7 +35,7 @@ npm run dev
 
 ---
 
-## 🧪 Testing the Offline Magic
+## Testing the Offline Magic
 
 1. **Login** → Use any username (e.g., "DemoTeacher")
 2. **Create Quiz** → Add questions while online
@@ -47,7 +47,7 @@ npm run dev
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 EdgeClass/
@@ -55,24 +55,24 @@ EdgeClass/
 │
 ├── frontend/                    # React PWA (Port 5173)
 │   ├── src/
-│   │   ├── db/                  # 📦 IndexedDB Layer (Primary Database)
+│   │   ├── db/                  # IndexedDB Layer (Primary Database)
 │   │   │   ├── index.js         # Dexie setup + Device ID
 │   │   │   ├── quizzes.js       # Quiz CRUD operations
 │   │   │   ├── attempts.js      # Attempt operations
 │   │   │   └── users.js         # User operations
 │   │   │
-│   │   ├── sync/                # 🔄 Sync Engine
+│   │   ├── sync/                # Sync Engine
 │   │   │   ├── syncManager.js   # Burst sync with exponential backoff
 │   │   │   └── useSyncStatus.js # React hook for sync status
 │   │   │
-│   │   ├── pages/               # 📄 Main Pages
+│   │   ├── pages/               # Main Pages
 │   │   │   ├── Login.jsx        # Device-based auth
 │   │   │   ├── Dashboard.jsx    # Stats + Quiz/Attempt views
 │   │   │   ├── CreateQuiz.jsx   # Multi-question builder
 │   │   │   ├── Quiz.jsx         # Question navigator + offline submit
 │   │   │   └── SyncPage.jsx     # Real-time sync activity
 │   │   │
-│   │   ├── components/          # 🧩 UI Components
+│   │   ├── components/          # UI Components
 │   │   │   ├── Layout.jsx       # App shell with header
 │   │   │   ├── OfflineBadge.jsx # Connection indicator
 │   │   │   ├── SyncStatus.jsx   # Sync progress display
@@ -96,7 +96,7 @@ EdgeClass/
 
 ---
 
-## 🏗️ Architecture Explained
+## Architecture Explained
 
 **Core Philosophy:** *"The device is truth. The server is backup."*
 

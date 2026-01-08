@@ -16,10 +16,10 @@ const SyncStatus = () => {
           message = '🚀 Sync started';
           break;
         case 'sync_completed':
-          message = `✅ Sync completed (${lastSyncEvent.successCount || 0} items)`;
+          message = `Sync completed (${lastSyncEvent.successCount || 0} items)`;
           break;
         case 'item_synced':
-          message = '✅ Item synced successfully';
+          message = 'Item synced successfully';
           break;
         case 'item_failed':
           message = `❌ Sync failed: ${lastSyncEvent.error}`;
@@ -28,7 +28,7 @@ const SyncStatus = () => {
           message = `❌ Sync error: ${lastSyncEvent.error}`;
           break;
         case 'sync_progress':
-          message = `⏳ Syncing: ${lastSyncEvent.current}/${lastSyncEvent.total}`;
+          message = `Syncing: ${lastSyncEvent.current}/${lastSyncEvent.total}`;
           break;
         default:
           message = `${lastSyncEvent.type}`;
@@ -119,7 +119,7 @@ const SyncStatus = () => {
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Network Status:</span>
           <span className={`font-semibold ${isOnline ? 'text-green-600' : 'text-red-600'}`}>
-            {isOnline ? '✅ Online' : '❌ Offline'}
+            {isOnline ? 'Online' : '❌ Offline'}
           </span>
         </div>
       </div>

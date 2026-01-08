@@ -18,22 +18,22 @@ const SyncPage = () => {
             📱 How Offline Mode Works
           </h3>
           <ul className="space-y-2 text-sm text-blue-800">
-            <li>✅ All data is saved locally on your device</li>
-            <li>✅ Works 100% without internet connection</li>
-            <li>✅ Auto-syncs when connection is detected</li>
-            <li>✅ No data loss even if offline for days</li>
+            <li>All data is saved locally on your device</li>
+            <li>Works 100% without internet connection</li>
+            <li>Auto-syncs when connection is detected</li>
+            <li>No data loss even if offline for days</li>
           </ul>
         </div>
 
         <div className="card bg-green-50 border-green-200">
           <h3 className="text-lg font-semibold text-green-900 mb-3">
-            🔄 Sync Features
+            Sync Features
           </h3>
           <ul className="space-y-2 text-sm text-green-800">
-            <li>✅ Exponential backoff retry strategy</li>
-            <li>✅ Batch processing for efficiency</li>
-            <li>✅ Conflict resolution (latest wins)</li>
-            <li>✅ Real-time sync status updates</li>
+            <li>Exponential backoff retry strategy</li>
+            <li>Batch processing for efficiency</li>
+            <li>Conflict resolution (latest wins)</li>
+            <li>Real-time sync status updates</li>
           </ul>
         </div>
       </div>

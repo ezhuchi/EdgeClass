@@ -115,7 +115,7 @@ const StudentDashboard = () => {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">
-          🎓 Welcome, {user?.username}!
+          Welcome, {user?.username}!
         </h1>
         <p className="text-blue-100">
           Take quizzes and track your progress. Everything works offline!
@@ -176,7 +176,7 @@ const StudentDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            📚 Available Quizzes ({filteredQuizzes.length})
+            Available Quizzes ({filteredQuizzes.length})
           </button>
           <button
             onClick={() => setView('scores')}
@@ -186,7 +186,7 @@ const StudentDashboard = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            🏆 My Scores ({filteredAttempts.length})
+            My Scores ({filteredAttempts.length})
           </button>
         </div>
 
@@ -270,7 +270,7 @@ const StudentDashboard = () => {
                       <h3 className="font-bold text-lg text-gray-900 flex-1">{quiz.title}</h3>
                       {attempted && (
                         <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded font-medium">
-                          ✓ Taken
+                          Taken
                         </span>
                       )}
                     </div>
@@ -298,7 +298,7 @@ const StudentDashboard = () => {
                     onClick={() => handleTakeQuiz(quiz)}
                     className="btn btn-primary w-full"
                   >
-                    {attempted ? '🔄 Retake Quiz' : '▶️ Take Quiz'}
+                    {attempted ? 'Retake Quiz' : 'Take Quiz'}
                   </button>
                 </div>
               );
@@ -375,7 +375,7 @@ const StudentDashboard = () => {
                         ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {attempt.syncStatus === 'synced' ? '✓ Synced' : '⏳ Pending'}
+                      {attempt.syncStatus === 'synced' ? 'Synced' : '⏳ Pending'}
                     </div>
                   </div>
                 </div>

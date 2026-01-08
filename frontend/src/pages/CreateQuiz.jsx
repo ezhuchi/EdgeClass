@@ -124,7 +124,7 @@ const CreateQuiz = () => {
         }))
       });
 
-      alert('✅ Quiz created successfully! (Saved offline, will sync when online)');
+      alert('Quiz created successfully! (Saved offline, will sync when online)');
       navigate('/dashboard');
     } catch (error) {
       console.error('Error creating quiz:', error);
@@ -191,7 +191,7 @@ const CreateQuiz = () => {
               onClick={addQuestion}
               className="btn btn-secondary"
             >
-              ➕ Add Question
+              Add Question
             </button>
           </div>
 
@@ -207,7 +207,7 @@ const CreateQuiz = () => {
                     onClick={() => removeQuestion(qIndex)}
                     className="text-red-600 hover:text-red-800"
                   >
-                    🗑️ Remove
+                    Remove
                   </button>
                 )}
               </div>
@@ -250,7 +250,7 @@ const CreateQuiz = () => {
                           required
                         />
                         <span className="text-xs text-gray-500 w-20">
-                          {q.correctAnswer === option ? '✅ Correct' : ''}
+                          {q.correctAnswer === option ? 'Correct' : ''}
                         </span>
                       </div>
                     ))}
@@ -269,7 +269,7 @@ const CreateQuiz = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">
-                💾 Quiz will be saved locally and synced automatically when online
+                Quiz will be saved locally and synced automatically when online
               </p>
             </div>
             <div className="flex gap-3">
