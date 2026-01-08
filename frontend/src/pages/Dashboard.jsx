@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getQuizzes, deleteQuiz } from '../db/quizzes';
 import { getAllAttempts } from '../db/attempts';
 import { getCurrentUser } from '../db';
+import db from '../db';
 import QuizCard from '../components/QuizCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useSyncStatus } from '../sync/useSyncStatus';
@@ -11,16 +12,23 @@ const Dashboard = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('quizzes'); // 'quizzes' or 'attempts'
+  const [view, setView] = useState('quizzes');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'title'
+  const [sortBy, setSortBy] = useState('newest');
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const { syncStats } = useSyncStatus();
+  const { syncStats, lastSyncEvent } = useSyncStatus();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Auto-refresh when sync completes
+  useEffect(() => {
+    if (lastSyncEvent?.type === 'sync_completed' || lastSyncEvent?.type === 'item_synced') {
+      loadData();
+    }
+  }, [lastSyncEvent]);
 
   const loadData = async () => {
     setLoading(true);
@@ -29,7 +37,22 @@ const Dashboard = () => {
         getQuizzes(),
         getAllAttempts()
       ]);
-      setQuizzes(quizzesData);
+      
+      // Load questions for each quiz
+      const quizzesWithQuestions = await Promise.all(
+        quizzesData.map(async (quiz) => {
+          const questions = await db.questions.where('quizId').equals(quiz.id).toArray();
+          return {
+            ...quiz,
+            questions: questions.map(q => ({
+              ...q,
+              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+            }))
+          };
+        })
+      );
+      
+      setQuizzes(quizzesWithQuestions);
       setAttempts(attemptsData);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -38,7 +61,6 @@ const Dashboard = () => {
     }
   };
   
-  // Filter and sort quizzes
   const filteredQuizzes = quizzes
     .filter(quiz => 
       quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +79,6 @@ const Dashboard = () => {
       }
     });
   
-  // Filter and sort attempts
   const filteredAttempts = attempts
     .filter(attempt => {
       const quiz = quizzes.find(q => q.id === attempt.quizId);
@@ -70,7 +91,7 @@ const Dashboard = () => {
   };
 
   const handleDeleteQuiz = async (id) => {
-    if (!confirm('Are you sure you want to delete this quiz?')) return;
+    if (!confirm('Delete this quiz? This cannot be undone.')) return;
 
     try {
       await deleteQuiz(id);
@@ -81,133 +102,118 @@ const Dashboard = () => {
     }
   };
 
+  const getAttemptCountForQuiz = (quizId) => {
+    return attempts.filter(a => a.quizId === quizId).length;
+  };
+
   if (loading) {
-    return <LoadingSpinner message="Loading your dashboard..." />;
+    return <LoadingSpinner message="Loading dashboard..." />;
   }
 
+  const avgScore = attempts.length > 0
+    ? Math.round(
+        attempts.reduce((acc, a) => acc + (a.score / a.totalQuestions) * 100, 0) /
+          attempts.length
+      )
+    : 0;
+
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-blue-600 rounded-xl p-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">
-          Welcome back, {user?.username || 'Student'}! 👋
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div>
+        <h1 className="text-3xl font-bold text-[--text-primary] mb-1">
+          Welcome back, {user?.username}
         </h1>
-        <p className="text-primary-100">
-          Continue learning even without internet. All your progress is saved locally.
+        <p className="text-[--text-secondary]">
+          {user?.role === 'teacher' ? 'Manage and create quizzes' : 'Take quizzes and track your progress'}
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card bg-blue-50 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-800 font-medium">Total Quizzes</p>
-              <p className="text-3xl font-bold text-blue-600">{quizzes.length}</p>
-            </div>
-            <div className="text-4xl">📚</div>
-          </div>
+      <div className="grid-responsive-2 lg:grid-cols-4">
+        <div className="card">
+          <div className="text-sm text-[--text-tertiary] font-medium mb-2">Total Quizzes</div>
+          <div className="text-3xl font-bold text-[--text-primary]">{quizzes.length}</div>
         </div>
 
-        <div className="card bg-green-50 border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-800 font-medium">Completed</p>
-              <p className="text-3xl font-bold text-green-600">{attempts.length}</p>
-            </div>
-            <div className="text-4xl">✅</div>
-          </div>
+        <div className="card">
+          <div className="text-sm text-[--text-tertiary] font-medium mb-2">Completed</div>
+          <div className="text-3xl font-bold text-[--text-primary]">{attempts.length}</div>
         </div>
 
-        <div className="card bg-yellow-50 border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-800 font-medium">Pending Sync</p>
-              <p className="text-3xl font-bold text-yellow-600">{syncStats.pending}</p>
-            </div>
-            <div className="text-4xl">⏳</div>
-          </div>
+        <div className="card">
+          <div className="text-sm text-[--text-tertiary] font-medium mb-2">Pending Sync</div>
+          <div className="text-3xl font-bold text-[--accent-color]">{syncStats.pending}</div>
         </div>
 
-        <div className="card bg-purple-50 border-purple-200">
+        <div className="card">
+          <div className="text-sm text-[--text-tertiary] font-medium mb-2">Average Score</div>
+          <div className="text-3xl font-bold text-[--text-primary]">{avgScore}%</div>
+        </div>
+      </div>
+
+      {/* Quick Action */}
+      {user?.role === 'teacher' && (
+        <div className="card bg-[--bg-tertiary] border-[--border-color]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-800 font-medium">Avg Score</p>
-              <p className="text-3xl font-bold text-purple-600">
-                {attempts.length > 0
-                  ? Math.round(
-                      attempts.reduce((acc, a) => acc + (a.score / a.totalQuestions) * 100, 0) /
-                        attempts.length
-                    )
-                  : 0}
-                %
+              <h3 className="text-lg font-semibold text-[--text-primary] mb-1">
+                Create a new quiz
+              </h3>
+              <p className="text-sm text-[--text-secondary]">
+                Build engaging quizzes that work offline
               </p>
             </div>
-            <div className="text-4xl">🎯</div>
+            <button
+              onClick={() => navigate('/create-quiz')}
+              className="btn btn-primary ml-4"
+            >
+              New Quiz
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Quick Actions */}
-      <div className="card bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Ready to create a quiz?
-            </h3>
-            <p className="text-sm text-gray-600">
-              Create engaging quizzes that work offline
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/create-quiz')}
-            className="btn btn-primary"
-          >
-            ➕ Create Quiz
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
-        <div className="flex gap-2">
+      {/* View Tabs */}
+      <div className="space-y-4">
+        <div className="flex gap-4 border-b border-[--border-color]">
           <button
             onClick={() => setView('quizzes')}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
               view === 'quizzes'
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-[--accent-color] text-[--accent-color]'
+                : 'border-transparent text-[--text-secondary] hover:text-[--text-primary]'
             }`}
           >
-            📚 Available Quizzes ({filteredQuizzes.length})
+            Quizzes ({filteredQuizzes.length})
           </button>
           <button
             onClick={() => setView('attempts')}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
               view === 'attempts'
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-[--accent-color] text-[--accent-color]'
+                : 'border-transparent text-[--text-secondary] hover:text-[--text-primary]'
             }`}
           >
             My Attempts ({filteredAttempts.length})
           </button>
         </div>
 
-        {/* Search and Sort */}
-        <div className="flex gap-2 items-center">
-          <div className="relative flex-1 sm:w-64">
+        {/* Search & Sort Controls */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search by title or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="input w-full"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[--text-tertiary] hover:text-[--text-primary] transition-colors"
+                title="Clear search"
               >
                 ✕
               </button>
@@ -218,97 +224,64 @@ const Dashboard = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="input sm:w-48"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
-              <option value="title">A-Z</option>
+              <option value="title">Title (A-Z)</option>
             </select>
           )}
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content Area */}
       {view === 'quizzes' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
           {filteredQuizzes.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              {searchTerm ? (
-                <>
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quizzes found
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Try a different search term
-                  </p>
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="btn btn-secondary"
-                  >
-                    Clear Search
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="text-6xl mb-4">📝</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No quizzes yet
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Create your first quiz to get started
-                  </p>
-                  <button
-                    onClick={() => navigate('/create-quiz')}
-                    className="btn btn-primary"
-                  >
-                    Create Quiz
-                  </button>
-                </>
+            <div className="card text-center py-12">
+              <h3 className="text-xl font-semibold text-[--text-primary] mb-2">
+                {searchTerm ? 'No quizzes found' : 'No quizzes yet'}
+              </h3>
+              <p className="text-[--text-secondary] mb-6">
+                {searchTerm 
+                  ? 'Try a different search term'
+                  : 'Get started by creating or taking a quiz'}
+              </p>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="btn btn-secondary"
+                >
+                  Clear Search
+                </button>
               )}
             </div>
           ) : (
-            filteredQuizzes.map((quiz) => (
-              <QuizCard
-                key={quiz.id}
-                quiz={quiz}
-                onTakeQuiz={handleTakeQuiz}
-                onDelete={handleDeleteQuiz}
-              />
-            ))
+            <div className="grid-responsive">
+              {filteredQuizzes.map((quiz) => (
+                <QuizCard
+                  key={quiz.id}
+                  quiz={quiz}
+                  onTakeQuiz={handleTakeQuiz}
+                  onDelete={user?.role === 'teacher' ? handleDeleteQuiz : undefined}
+                  totalAttempts={getAttemptCountForQuiz(quiz.id)}
+                />
+              ))}
+            </div>
           )}
         </div>
       ) : (
         <div className="space-y-3">
           {filteredAttempts.length === 0 ? (
-            <div className="text-center py-12">
-              {searchTerm ? (
-                <>
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No attempts found
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Try a different search term
-                  </p>
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="btn btn-secondary"
-                  >
-                    Clear Search
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="text-6xl mb-4">🎯</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No attempts yet
-                  </h3>
-                  <p className="text-gray-600">
-                    Take a quiz to see your results here
-                  </p>
-                </>
-              )}
+            <div className="card text-center py-12">
+              <h3 className="text-xl font-semibold text-[--text-primary] mb-2">
+                {searchTerm ? 'No attempts found' : 'No attempts yet'}
+              </h3>
+              <p className="text-[--text-secondary]">
+                {searchTerm
+                  ? 'Try a different search term'
+                  : 'Take a quiz to see your results here'}
+              </p>
             </div>
           ) : (
             filteredAttempts.map((attempt) => {
@@ -316,32 +289,29 @@ const Dashboard = () => {
               const percentage = Math.round((attempt.score / attempt.totalQuestions) * 100);
               
               return (
-                <div key={attempt.id} className="card flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-1">
-                      {quiz?.title || 'Quiz'}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      Completed: {new Date(attempt.completedAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {attempt.score}/{attempt.totalQuestions}
-                      </p>
-                      <p className={`text-sm font-medium ${
-                        percentage >= 70 ? 'text-green-600' : 'text-yellow-600'
-                      }`}>
-                        {percentage}%
+                <div key={attempt.id} className="card">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-[--text-primary] mb-1 truncate">
+                        {quiz?.title || 'Quiz'}
+                      </h4>
+                      <p className="text-sm text-[--text-tertiary]">
+                        {new Date(attempt.completedAt).toLocaleString()}
                       </p>
                     </div>
-                    <div className={`px-3 py-1 rounded text-xs font-medium ${
-                      attempt.syncStatus === 'synced'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {attempt.syncStatus === 'synced' ? '✓ Synced' : 'Pending'}
+                    <div className="flex items-center gap-6 shrink-0">
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-[--text-primary]">
+                          {attempt.score}/{attempt.totalQuestions}
+                        </p>
+                        <p className={`text-sm font-medium ${
+                          percentage >= 70 
+                            ? 'text-[--success-color]' 
+                            : 'text-[--warning-color]'
+                        }`}>
+                          {percentage}%
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -21,9 +21,8 @@ class ErrorBoundary extends React.Component {
       errorInfo
     });
 
-    // Log to error tracking service (e.g., Sentry) in production
     if (import.meta.env.PROD) {
-      // Example: Sentry.captureException(error);
+      // Log to error tracking service in production
     }
   }
 
@@ -42,30 +41,29 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-6">
-              <div className="text-6xl mb-4">😵</div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Oops! Something went wrong
+        <div className="min-h-screen bg-[--bg-primary] text-[--text-primary] flex items-center justify-center p-4">
+          <div className="max-w-md w-full card">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-[--text-primary] mb-2">
+                Something went wrong
               </h1>
-              <p className="text-gray-600">
-                Don't worry - your data is safe offline. Try refreshing the page.
+              <p className="text-[--text-secondary]">
+                Your data is safe and saved offline. Try refreshing the page.
               </p>
             </div>
 
             {/* Error details (development only) */}
             {import.meta.env.DEV && this.state.error && (
               <details className="mb-6">
-                <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 mb-2">
+                <summary className="cursor-pointer text-sm text-[--text-secondary] hover:text-[--text-primary] mb-2">
                   Show error details
                 </summary>
-                <div className="bg-red-50 border border-red-200 rounded p-4 text-xs overflow-auto max-h-48">
-                  <p className="font-mono text-red-800 mb-2">
+                <div className="bg-[--bg-tertiary] border border-[--border-color] rounded p-4 text-xs overflow-auto max-h-48">
+                  <p className="font-mono text-[--danger-color] mb-2">
                     {this.state.error.toString()}
                   </p>
                   {this.state.errorInfo && (
-                    <pre className="text-red-700 whitespace-pre-wrap">
+                    <pre className="text-[--text-secondary] whitespace-pre-wrap">
                       {this.state.errorInfo.componentStack}
                     </pre>
                   )}
@@ -74,25 +72,25 @@ class ErrorBoundary extends React.Component {
             )}
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <button
                 onClick={this.handleReset}
-                className="flex-1 btn bg-primary-600 text-white hover:bg-primary-700"
+                className="flex-1 btn btn-primary"
               >
                 Try Again
               </button>
               <button
                 onClick={this.handleReload}
-                className="flex-1 btn bg-gray-600 text-white hover:bg-gray-700"
+                className="flex-1 btn btn-secondary"
               >
-                Reload Page
+                Reload
               </button>
             </div>
 
-            {/* Offline reminder */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
-              <p className="text-sm text-blue-800">
-                <strong>💡 Tip:</strong> This app works offline! Your quizzes and progress are saved locally on your device.
+            {/* Info */}
+            <div className="p-4 bg-[--bg-tertiary] rounded border border-[--border-color]">
+              <p className="text-xs text-[--text-secondary] leading-relaxed">
+                Your data is automatically saved offline and will sync when you're connected.
               </p>
             </div>
           </div>

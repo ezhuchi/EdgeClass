@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { initDatabase } from './db/init.js';
 import syncRoutes from './routes/sync.js';
 import statsRoutes from './routes/stats.js';
+import doubtsRoutes from './routes/doubts.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,7 @@ initDatabase();
 // Routes
 app.use('/api/sync', syncRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api', doubtsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

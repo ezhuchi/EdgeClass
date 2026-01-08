@@ -1,7 +1,8 @@
 import db from '../db';
 import { networkDetector } from '../utils/networkDetector';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Use relative URLs - Vite proxy will forward to backend
+const API_URL = '';
 const MAX_RETRY_COUNT = 5;
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 
@@ -73,12 +74,15 @@ class SyncManager {
       .toArray();
     
     // Sort by endpoint to respect foreign key dependencies
-    // Order: users -> quizzes -> questions -> attempts
+    // Order: users -> quizzes -> questions -> attempts -> doubts -> doubt_replies
     const order = {
       '/api/sync/users': 1,
       '/api/sync/quizzes': 2,
       '/api/sync/questions': 3,
-      '/api/sync/attempts': 4
+      '/api/sync/attempts': 4,
+      '/api/sync/doubts': 5,
+      '/api/sync/doubt-replies': 6,
+      '/api/sync/doubt-status': 7
     };
     
     return items.sort((a, b) => {

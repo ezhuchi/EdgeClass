@@ -9,6 +9,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import CreateQuiz from './pages/CreateQuiz';
 import Quiz from './pages/Quiz';
 import SyncPage from './pages/SyncPage';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -54,60 +55,62 @@ const RoleDashboard = () => {
 function App() {
   return (
     <ErrorBoundary>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
+      <ThemeProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <RoleDashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/create-quiz"
-            element={
-              <TeacherRoute>
-                <Layout>
-                  <CreateQuiz />
-                </Layout>
-              </TeacherRoute>
-            }
-          />
-          <Route
-            path="/quiz/:id"
-            element={
-              <StudentRoute>
-                <Layout>
-                  <Quiz />
-                </Layout>
-              </StudentRoute>
-            }
-          />
-          <Route
-            path="/sync"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <SyncPage />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <RoleDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-quiz"
+              element={
+                <TeacherRoute>
+                  <Layout>
+                    <CreateQuiz />
+                  </Layout>
+                </TeacherRoute>
+              }
+            />
+            <Route
+              path="/quiz/:id"
+              element={
+                <StudentRoute>
+                  <Layout>
+                    <Quiz />
+                  </Layout>
+                </StudentRoute>
+              }
+            />
+            <Route
+              path="/sync"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SyncPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Default Route */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
-          {/* 404 */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
+            {/* Default Route */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* 404 */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

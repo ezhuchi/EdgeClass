@@ -10,102 +10,96 @@ const SyncStatus = () => {
     if (lastSyncEvent) {
       const timestamp = new Date().toLocaleTimeString();
       let message = '';
+      let type = lastSyncEvent.type;
 
       switch (lastSyncEvent.type) {
         case 'sync_started':
-          message = '🚀 Sync started';
+          message = 'Sync started';
           break;
         case 'sync_completed':
-          message = `Sync completed (${lastSyncEvent.successCount || 0} items)`;
+          message = `Completed (${lastSyncEvent.successCount || 0} items)`;
           break;
         case 'item_synced':
-          message = 'Item synced successfully';
+          message = 'Item synced';
           break;
         case 'item_failed':
-          message = `❌ Sync failed: ${lastSyncEvent.error}`;
+          message = `Failed: ${lastSyncEvent.error}`;
           break;
         case 'sync_error':
-          message = `❌ Sync error: ${lastSyncEvent.error}`;
+          message = `Error: ${lastSyncEvent.error}`;
           break;
         case 'sync_progress':
-          message = `Syncing: ${lastSyncEvent.current}/${lastSyncEvent.total}`;
+          message = `Progress: ${lastSyncEvent.current}/${lastSyncEvent.total}`;
           break;
         default:
-          message = `${lastSyncEvent.type}`;
+          message = lastSyncEvent.type;
       }
 
       setLogs(prev => [{
         id: Date.now(),
         timestamp,
         message,
-        type: lastSyncEvent.type
-      }, ...prev].slice(0, 20)); // Keep last 20 logs
+        type
+      }, ...prev].slice(0, 20));
     }
   }, [lastSyncEvent]);
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Sync Status</h3>
-          <p className="text-sm text-gray-600">Real-time synchronization activity</p>
+          <h3 className="text-lg font-semibold text-[--text-primary]">Sync Status</h3>
+          <p className="text-sm text-[--text-secondary]">Real-time synchronization activity</p>
         </div>
         <button
           onClick={triggerSync}
           disabled={!isOnline || isSyncing}
           className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSyncing ? (
-            <>
-              <span className="animate-spin mr-2">⟳</span>
-              Syncing...
-            </>
-          ) : (
-            <>🔄 Sync Now</>
-          )}
+          {isSyncing ? 'Syncing...' : 'Sync Now'}
         </button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-blue-600">{syncStats.pending}</div>
-          <div className="text-xs text-blue-800">Pending</div>
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="card-sm text-center">
+          <div className="text-2xl font-bold text-[--accent-color]">{syncStats.pending}</div>
+          <div className="text-xs text-[--text-tertiary] mt-1">Pending</div>
         </div>
-        <div className="bg-green-50 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-green-600">{syncStats.synced}</div>
-          <div className="text-xs text-green-800">Synced</div>
+        <div className="card-sm text-center">
+          <div className="text-2xl font-bold text-[--success-color]">{syncStats.synced}</div>
+          <div className="text-xs text-[--text-tertiary] mt-1">Synced</div>
         </div>
-        <div className="bg-red-50 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-red-600">{syncStats.failed}</div>
-          <div className="text-xs text-red-800">Failed</div>
+        <div className="card-sm text-center">
+          <div className="text-2xl font-bold text-[--danger-color]">{syncStats.failed}</div>
+          <div className="text-xs text-[--text-tertiary] mt-1">Failed</div>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-gray-600">{syncStats.total}</div>
-          <div className="text-xs text-gray-800">Total</div>
+        <div className="card-sm text-center">
+          <div className="text-2xl font-bold text-[--text-primary]">{syncStats.total}</div>
+          <div className="text-xs text-[--text-tertiary] mt-1">Total</div>
         </div>
       </div>
 
       {/* Activity Log */}
-      <div>
-        <div 
-          className="flex items-center justify-between cursor-pointer mb-2"
+      <div className="mb-6">
+        <button
           onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center justify-between w-full p-3 bg-[--bg-tertiary] rounded-lg hover:bg-[--border-color] transition-colors"
         >
-          <h4 className="text-sm font-semibold text-gray-700">Activity Log</h4>
-          <span className="text-gray-500">{isExpanded ? '▼' : '▶'}</span>
-        </div>
+          <h4 className="text-sm font-semibold text-[--text-primary]">Activity Log</h4>
+          <span className="text-[--text-secondary]">{isExpanded ? '▼' : '▶'}</span>
+        </button>
 
         {isExpanded && (
-          <div className="space-y-1 max-h-64 overflow-y-auto bg-gray-50 rounded-lg p-3">
+          <div className="mt-3 space-y-1 max-h-64 overflow-y-auto bg-[--bg-tertiary] rounded-lg p-3 border border-[--border-color]">
             {logs.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-[--text-tertiary] text-center py-4">
                 No sync activity yet
               </p>
             ) : (
               logs.map(log => (
-                <div key={log.id} className="text-xs font-mono text-gray-700 py-1 border-b border-gray-200 last:border-0">
-                  <span className="text-gray-500">[{log.timestamp}]</span>{' '}
+                <div key={log.id} className="text-xs font-mono text-[--text-secondary] py-1 border-b border-[--border-color] last:border-0">
+                  <span className="text-[--text-tertiary]">[{log.timestamp}]</span>{' '}
                   <span>{log.message}</span>
                 </div>
               ))
@@ -115,11 +109,15 @@ const SyncStatus = () => {
       </div>
 
       {/* Network Status */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Network Status:</span>
-          <span className={`font-semibold ${isOnline ? 'text-green-600' : 'text-red-600'}`}>
-            {isOnline ? 'Online' : '❌ Offline'}
+      <div className="p-3 bg-[--bg-tertiary] rounded-lg border border-[--border-color]">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[--text-secondary]">Connection:</span>
+          <span className={`text-sm font-medium ${
+            isOnline 
+              ? 'text-[--success-color]' 
+              : 'text-[--warning-color]'
+          }`}>
+            {isOnline ? 'Online' : 'Offline'}
           </span>
         </div>
       </div>

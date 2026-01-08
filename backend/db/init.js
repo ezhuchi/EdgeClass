@@ -49,6 +49,7 @@ export const initDatabase = () => {
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT,
+      timeLimit INTEGER DEFAULT 30,
       createdBy TEXT NOT NULL,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
@@ -82,6 +83,36 @@ export const initDatabase = () => {
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    -- Doubts table
+    CREATE TABLE IF NOT EXISTS doubts (
+      id TEXT PRIMARY KEY,
+      studentId TEXT NOT NULL,
+      topic TEXT,
+      chapter TEXT,
+      question TEXT NOT NULL,
+      attachments TEXT,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'answered', 'resolved')),
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      deviceId TEXT NOT NULL,
+      syncedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    -- Doubt replies table
+    CREATE TABLE IF NOT EXISTS doubt_replies (
+      id TEXT PRIMARY KEY,
+      doubtId TEXT NOT NULL,
+      userId TEXT NOT NULL,
+      message TEXT NOT NULL,
+      attachments TEXT,
+      createdAt TEXT NOT NULL,
+      deviceId TEXT NOT NULL,
+      syncedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (doubtId) REFERENCES doubts(id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    );
+
     -- Sync logs table
     CREATE TABLE IF NOT EXISTS sync_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,6 +129,9 @@ export const initDatabase = () => {
     CREATE INDEX IF NOT EXISTS idx_questions_quizId ON questions(quizId);
     CREATE INDEX IF NOT EXISTS idx_attempts_quizId ON attempts(quizId);
     CREATE INDEX IF NOT EXISTS idx_attempts_userId ON attempts(userId);
+    CREATE INDEX IF NOT EXISTS idx_doubts_studentId ON doubts(studentId);
+    CREATE INDEX IF NOT EXISTS idx_doubts_status ON doubts(status);
+    CREATE INDEX IF NOT EXISTS idx_doubt_replies_doubtId ON doubt_replies(doubtId);
     CREATE INDEX IF NOT EXISTS idx_sync_logs_deviceId ON sync_logs(deviceId);
   `;
 

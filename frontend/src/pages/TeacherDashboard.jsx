@@ -7,23 +7,31 @@ import db from '../db';
 import QuizCard from '../components/QuizCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useSyncStatus } from '../sync/useSyncStatus';
+import TeacherDoubts from '../components/TeacherDoubts';
 
 const TeacherDashboard = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [allAttempts, setAllAttempts] = useState([]);
   const [studentUsers, setStudentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('quizzes'); // 'quizzes' or 'attempts'
+  const [view, setView] = useState('quizzes'); // 'quizzes', 'attempts', or 'doubts'
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [selectedQuizId, setSelectedQuizId] = useState(null);
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const { syncStats } = useSyncStatus();
+  const { syncStats, lastSyncEvent } = useSyncStatus();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Auto-refresh when sync completes
+  useEffect(() => {
+    if (lastSyncEvent?.type === 'sync_completed' || lastSyncEvent?.type === 'item_synced') {
+      loadData();
+    }
+  }, [lastSyncEvent]);
 
   const loadData = async () => {
     setLoading(true);
@@ -31,6 +39,20 @@ const TeacherDashboard = () => {
       // Get all quizzes created by this teacher
       const allQuizzes = await getQuizzes();
       const myQuizzes = allQuizzes.filter(q => q.createdBy === user?.id);
+      
+      // Load questions count for each quiz
+      const quizzesWithQuestions = await Promise.all(
+        myQuizzes.map(async (quiz) => {
+          const questions = await db.questions.where('quizId').equals(quiz.id).toArray();
+          return {
+            ...quiz,
+            questions: questions.map(q => ({
+              ...q,
+              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+            }))
+          };
+        })
+      );
       
       // Get only attempts for MY quizzes (not other teachers' quizzes)
       const allAttempts = await getAllAttempts();
@@ -40,7 +62,7 @@ const TeacherDashboard = () => {
       // Get all student users
       const users = await db.users.where('role').equals('student').toArray();
       
-      setQuizzes(myQuizzes);
+      setQuizzes(quizzesWithQuestions);
       setAllAttempts(attempts);
       setStudentUsers(users);
     } catch (error) {
@@ -106,69 +128,58 @@ const TeacherDashboard = () => {
   const quizAttempts = selectedQuizId ? getQuizAttempts(selectedQuizId) : allAttempts;
   const totalStudents = new Set(allAttempts.map(a => a.userId)).size;
 
+  const getAttemptCountForQuiz = (quizId) => {
+    return allAttempts.filter(a => a.quizId === quizId).length;
+  };
+
+  const getTotalStudentsForQuiz = (quizId) => {
+    return new Set(allAttempts.filter(a => a.quizId === quizId).map(a => a.userId)).size;
+  };
+
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">
-          👨‍🏫 Teacher Dashboard - Welcome, {user?.username}!
+      <div className="bg-[--bg-tertiary] rounded-xl p-6">
+        <h1 className="text-3xl font-bold text-[--text-primary] mb-2">
+          Teacher Dashboard - Welcome, {user?.username}
         </h1>
-        <p className="text-purple-100">
+        <p className="text-[--text-secondary]">
           Create and manage quizzes. View student performance even offline.
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card bg-purple-50 border-purple-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-purple-800 font-medium">My Quizzes</p>
-              <p className="text-3xl font-bold text-purple-600">{quizzes.length}</p>
-            </div>
-            <div className="text-4xl">📚</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card">
+          <div>
+            <p className="text-sm text-[--text-tertiary] font-medium">My Quizzes</p>
+            <p className="text-3xl font-bold text-[--text-primary]">{quizzes.length}</p>
           </div>
         </div>
 
-        <div className="card bg-blue-50 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-800 font-medium">Total Students</p>
-              <p className="text-3xl font-bold text-blue-600">{totalStudents}</p>
-            </div>
-            <div className="text-4xl">👥</div>
+        <div className="card">
+          <div>
+            <p className="text-sm text-[--text-tertiary] font-medium">Total Students</p>
+            <p className="text-3xl font-bold text-[--text-primary]">{totalStudents}</p>
           </div>
         </div>
 
-        <div className="card bg-green-50 border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-800 font-medium">Total Attempts</p>
-              <p className="text-3xl font-bold text-green-600">{allAttempts.length}</p>
-            </div>
-            <div className="text-4xl">✅</div>
-          </div>
-        </div>
-
-        <div className="card bg-yellow-50 border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-800 font-medium">Pending Sync</p>
-              <p className="text-3xl font-bold text-yellow-600">{syncStats.pending}</p>
-            </div>
-            <div className="text-4xl">⏳</div>
+        <div className="card">
+          <div>
+            <p className="text-sm text-[--text-tertiary] font-medium">Total Attempts</p>
+            <p className="text-3xl font-bold text-[--text-primary]">{allAttempts.length}</p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="card bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+      <div className="card bg-[--bg-tertiary]">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg font-semibold text-[--text-primary] mb-1">
               Ready to create a new quiz?
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[--text-secondary]">
               Build engaging quizzes that work offline for your students
             </p>
           </div>
@@ -182,14 +193,14 @@ const TeacherDashboard = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[--border-color] pb-4">
         <div className="flex gap-2">
           <button
             onClick={() => { setView('quizzes'); setSelectedQuizId(null); }}
             className={`px-4 py-2 font-medium transition-colors ${
               view === 'quizzes'
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'text-[--accent-color] border-b-2 border-[--accent-color]'
+                : 'text-[--text-secondary] hover:text-[--text-primary]'
             }`}
           >
             My Quizzes ({filteredQuizzes.length})
@@ -198,29 +209,39 @@ const TeacherDashboard = () => {
             onClick={() => setView('attempts')}
             className={`px-4 py-2 font-medium transition-colors ${
               view === 'attempts'
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'text-[--accent-color] border-b-2 border-[--accent-color]'
+                : 'text-[--text-secondary] hover:text-[--text-primary]'
             }`}
           >
-            📊 Student Attempts ({quizAttempts.length})
+            Student Attempts ({quizAttempts.length})
+          </button>
+          <button
+            onClick={() => setView('doubts')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              view === 'doubts'
+                ? 'text-[--accent-color] border-b-2 border-[--accent-color]'
+                : 'text-[--text-secondary] hover:text-[--text-primary]'
+            }`}
+          >
+            Doubts
           </button>
         </div>
 
-        {/* Search and Sort */}
+        {/* Search and Sort - Hidden on doubts view */}
+        {view !== 'doubts' && (
         <div className="flex gap-2 items-center">
-          <div className="relative flex-1 sm:w-64">
+          <div className="relative w-64">
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="input w-full"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[--text-tertiary] hover:text-[--text-primary] transition-colors"
               >
                 ✕
               </button>
@@ -231,7 +252,7 @@ const TeacherDashboard = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="input"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -239,20 +260,20 @@ const TeacherDashboard = () => {
             </select>
           )}
         </div>
+        )}
       </div>
 
       {/* Content */}
       {view === 'quizzes' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid-responsive">
           {filteredQuizzes.length === 0 ? (
-            <div className="col-span-full text-center py-12">
+            <div className="col-span-full text-center py-12 card">
               {searchTerm ? (
                 <>
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-semibold text-[--text-primary] mb-2">
                     No quizzes found
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-[--text-secondary] mb-4">
                     Try a different search term
                   </p>
                   <button
@@ -264,11 +285,10 @@ const TeacherDashboard = () => {
                 </>
               ) : (
                 <>
-                  <div className="text-6xl mb-4">📝</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-semibold text-[--text-primary] mb-2">
                     No quizzes yet
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-[--text-secondary] mb-4">
                     Create your first quiz to get started
                   </p>
                   <button
@@ -281,52 +301,29 @@ const TeacherDashboard = () => {
               )}
             </div>
           ) : (
-            filteredQuizzes.map((quiz) => {
-              const attempts = getQuizAttempts(quiz.id);
-              return (
-                <div key={quiz.id} className="card hover:shadow-lg transition-shadow">
-                  <div className="mb-3">
-                    <h3 className="font-bold text-lg text-gray-900 mb-1">{quiz.title}</h3>
-                    {quiz.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">{quiz.description}</p>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                    <span>📅 {new Date(quiz.createdAt).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span>{attempts.length} attempts</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleViewAttempts(quiz.id)}
-                      className="btn btn-secondary flex-1 text-sm"
-                    >
-                      📊 View Attempts
-                    </button>
-                    <button
-                      onClick={() => handleDeleteQuiz(quiz.id)}
-                      className="btn bg-red-500 text-white hover:bg-red-600 px-4 text-sm"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              );
-            })
+            filteredQuizzes.map((quiz) => (
+              <QuizCard
+                key={quiz.id}
+                quiz={quiz}
+                onTakeQuiz={handleViewAttempts}
+                onDelete={handleDeleteQuiz}
+                totalAttempts={getAttemptCountForQuiz(quiz.id)}
+                totalStudents={getTotalStudentsForQuiz(quiz.id)}
+                buttonText="View Attempts"
+              />
+            ))
           )}
         </div>
-      ) : (
+      ) : view === 'attempts' ? (
         <div className="space-y-4">
           {selectedQuiz && (
-            <div className="card bg-purple-50 border-purple-200">
+            <div className="card bg-[--bg-tertiary]">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-[--text-primary]">
                     Viewing attempts for: {selectedQuiz.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-[--text-secondary] mt-1">
                     {quizAttempts.length} total attempts
                   </p>
                 </div>
@@ -341,12 +338,11 @@ const TeacherDashboard = () => {
           )}
 
           {quizAttempts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <div className="text-center py-12 card">
+              <h3 className="text-xl font-semibold text-[--text-primary] mb-2">
                 No attempts yet
               </h3>
-              <p className="text-gray-600">
+              <p className="text-[--text-secondary]">
                 {selectedQuiz 
                   ? 'No students have attempted this quiz yet' 
                   : 'Students haven\'t taken any quizzes yet'}
@@ -361,34 +357,34 @@ const TeacherDashboard = () => {
                 return (
                   <div key={attempt.id} className="card flex items-center justify-between">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-1">
-                        👤 {getStudentName(attempt.userId)}
+                      <h4 className="font-semibold text-[--text-primary] mb-1">
+                        {getStudentName(attempt.userId)}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-[--text-secondary]">
                         Quiz: {quiz?.title || 'Unknown Quiz'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-[--text-tertiary] mt-1">
                         {new Date(attempt.completedAt).toLocaleString()}
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-2xl font-bold text-[--text-primary]">
                           {attempt.score}/{attempt.totalQuestions}
                         </p>
                         <p className={`text-sm font-medium ${
-                          percentage >= 70 ? 'text-green-600' : 
-                          percentage >= 50 ? 'text-yellow-600' : 'text-red-600'
+                          percentage >= 70 ? 'text-[--success-color]' : 
+                          percentage >= 50 ? 'text-[--warning-color]' : 'text-[--error-color]'
                         }`}>
                           {percentage}%
                         </p>
                       </div>
                       <div className={`px-3 py-1 rounded text-xs font-medium ${
                         attempt.syncStatus === 'synced'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-[--success-bg] text-[--success-color]'
+                          : 'bg-[--warning-bg] text-[--warning-color]'
                       }`}>
-                        {attempt.syncStatus === 'synced' ? 'Synced' : '⏳ Pending'}
+                        {attempt.syncStatus === 'synced' ? 'Synced' : 'Pending'}
                       </div>
                     </div>
                   </div>
@@ -397,6 +393,8 @@ const TeacherDashboard = () => {
             </div>
           )}
         </div>
+      ) : (
+        <TeacherDoubts />
       )}
     </div>
   );

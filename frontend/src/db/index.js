@@ -18,6 +18,12 @@ export class GhostClassDB extends Dexie {
       // Student attempts (work offline)
       attempts: 'id, quizId, userId, answers, score, completedAt, syncStatus, updatedAt, deviceId',
       
+      // Doubts (student questions)
+      doubts: 'id, studentId, topic, chapter, question, createdAt, syncStatus, updatedAt, deviceId, status',
+      
+      // Doubt replies (teacher/student responses)
+      doubtReplies: 'id, doubtId, userId, message, createdAt, syncStatus, updatedAt, deviceId',
+      
       // Sync queue for offline requests
       syncQueue: '++id, endpoint, method, data, timestamp, retryCount, status, deviceId'
     });

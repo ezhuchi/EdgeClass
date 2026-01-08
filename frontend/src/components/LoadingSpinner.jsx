@@ -1,13 +1,11 @@
 const LoadingSpinner = ({ message = 'Loading...' }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="relative">
-        <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-        <span className="absolute inset-0 flex items-center justify-center text-2xl">
-          👻
-        </span>
+    <div className="flex flex-col items-center justify-center min-h-96">
+      <div className="relative w-12 h-12 mb-4">
+        <div className="absolute inset-0 border-2 border-[--border-color] rounded-full"></div>
+        <div className="absolute inset-0 border-2 border-transparent border-t-[--accent-color] rounded-full animate-spin"></div>
       </div>
-      <p className="mt-4 text-gray-600 text-sm">{message}</p>
+      <p className="text-[--text-secondary] text-sm">{message}</p>
     </div>
   );
 };

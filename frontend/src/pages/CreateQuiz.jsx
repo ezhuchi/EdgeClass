@@ -6,14 +6,15 @@ import { getCurrentUser } from '../db';
 const CreateQuiz = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [timeLimit, setTimeLimit] = useState(30); // Default 30 minutes
   const [questions, setQuestions] = useState([
     { question: '', options: ['', '', '', ''], correctAnswer: '' }
   ]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const user = getCurrentUser();
   
-  // Verify user is a teacher
   useEffect(() => {
     if (!user || user.role !== 'teacher') {
       alert('Access denied. Only teachers can create quizzes.');
@@ -44,33 +45,42 @@ const CreateQuiz = () => {
     setQuestions(updated);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Enhanced Validation
+  const validateAndCreate = async () => {
+    setError('');
     const trimmedTitle = title.trim();
+    
     if (!trimmedTitle) {
-      alert('Please enter a quiz title');
+      setError('Please enter a quiz title');
       return;
     }
     
     if (trimmedTitle.length < 3) {
-      alert('Quiz title must be at least 3 characters long');
+      setError('Quiz title must be at least 3 characters long');
       return;
     }
     
     if (trimmedTitle.length > 200) {
-      alert('Quiz title must be less than 200 characters');
+      setError('Quiz title must be less than 200 characters');
+      return;
+    }
+
+    if (!timeLimit || timeLimit < 1) {
+      setError('Time limit must be at least 1 minute');
+      return;
+    }
+
+    if (timeLimit > 180) {
+      setError('Time limit cannot exceed 180 minutes (3 hours)');
       return;
     }
 
     if (questions.length === 0) {
-      alert('Please add at least one question');
+      setError('Please add at least one question');
       return;
     }
     
     if (questions.length > 50) {
-      alert('Maximum 50 questions allowed per quiz');
+      setError('Maximum 50 questions allowed per quiz');
       return;
     }
 
@@ -79,35 +89,34 @@ const CreateQuiz = () => {
       const trimmedQuestion = q.question.trim();
       
       if (!trimmedQuestion) {
-        alert(`Question ${i + 1} is empty`);
+        setError(`Question ${i + 1}: Please enter the question text`);
         return;
       }
       
       if (trimmedQuestion.length < 5) {
-        alert(`Question ${i + 1} must be at least 5 characters long`);
+        setError(`Question ${i + 1}: Must be at least 5 characters long`);
         return;
       }
       
       if (trimmedQuestion.length > 500) {
-        alert(`Question ${i + 1} is too long (max 500 characters)`);
+        setError(`Question ${i + 1}: Cannot exceed 500 characters`);
         return;
       }
       
       const trimmedOptions = q.options.map(opt => opt.trim());
       if (trimmedOptions.some(opt => !opt)) {
-        alert(`Question ${i + 1} has empty options`);
+        setError(`Question ${i + 1}: All options must be filled`);
         return;
       }
       
-      // Check for duplicate options
       const uniqueOptions = new Set(trimmedOptions);
       if (uniqueOptions.size !== trimmedOptions.length) {
-        alert(`Question ${i + 1} has duplicate options`);
+        setError(`Question ${i + 1}: Duplicate options are not allowed`);
         return;
       }
       
       if (!q.correctAnswer && q.correctAnswer !== 0) {
-        alert(`Question ${i + 1} has no correct answer selected`);
+        setError(`Question ${i + 1}: Please select the correct answer`);
         return;
       }
     }
@@ -117,6 +126,7 @@ const CreateQuiz = () => {
       await createQuiz({
         title: trimmedTitle,
         description: description.trim(),
+        timeLimit: timeLimit, // Time limit in minutes
         questions: questions.map(q => ({
           question: q.question.trim(),
           options: q.options.map(opt => opt.trim()),
@@ -124,140 +134,169 @@ const CreateQuiz = () => {
         }))
       });
 
-      alert('Quiz created successfully! (Saved offline, will sync when online)');
       navigate('/dashboard');
     } catch (error) {
       console.error('Error creating quiz:', error);
-      alert('Failed to create quiz. Please try again.');
+      setError('Failed to create quiz. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    validateAndCreate();
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Quiz</h1>
-        <p className="text-gray-600">
-          Create engaging quizzes that work offline. Your quiz will be saved locally and synced when you're online.
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[--text-primary] mb-2">Create Quiz</h1>
+        <p className="text-[--text-secondary]">
+          Build engaging quizzes that work offline. Automatically synced when online.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Quiz Details */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quiz Details</h2>
+          <h2 className="section-title mb-6">Quiz Information</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                Quiz Title *
-              </label>
+              <label htmlFor="title" className="label">Quiz Title</label>
               <input
                 id="title"
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Introduction to Science"
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setError('');
+                }}
+                placeholder="e.g., Biology 101: Photosynthesis"
                 className="input"
                 required
               />
+              <p className="label-hint">{title.length}/200 characters</p>
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Description (Optional)
-              </label>
+              <label htmlFor="description" className="label">Description (Optional)</label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description of the quiz..."
-                className="input min-h-[100px]"
+                placeholder="Brief description of the quiz content..."
+                className="textarea"
                 rows={3}
               />
+            </div>
+
+            <div>
+              <label htmlFor="timeLimit" className="label">Time Limit (Minutes)</label>
+              <input
+                id="timeLimit"
+                type="number"
+                min="1"
+                max="180"
+                value={timeLimit}
+                onChange={(e) => {
+                  setTimeLimit(parseInt(e.target.value) || 0);
+                  setError('');
+                }}
+                placeholder="30"
+                className="input"
+                required
+              />
+              <p className="label-hint">Students will have {timeLimit} minute{timeLimit !== 1 ? 's' : ''} to complete this quiz (1-180 minutes)</p>
             </div>
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 bg-opacity-10 bg-[--danger-color] text-[--danger-color] rounded-lg text-sm border border-[--danger-color] border-opacity-20">
+            {error}
+          </div>
+        )}
+
         {/* Questions */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Questions ({questions.length})
+            <h2 className="text-2xl font-bold text-[--text-primary]">
+              Total Questions : {questions.length}
             </h2>
             <button
               type="button"
               onClick={addQuestion}
               className="btn btn-secondary"
+              disabled={questions.length >= 50}
             >
               Add Question
             </button>
           </div>
 
           {questions.map((q, qIndex) => (
-            <div key={qIndex} className="card bg-gray-50">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div key={qIndex} className="card bg-[--bg-tertiary]">
+              <div className="flex items-start justify-between mb-6">
+                <h3 className="text-lg font-semibold text-[--text-primary]">
                   Question {qIndex + 1}
                 </h3>
                 {questions.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeQuestion(qIndex)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-[--danger-color] hover:text-[--danger-color] font-medium text-sm transition-colors"
                   >
                     Remove
                   </button>
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Question Text *
-                  </label>
+                  <label className="label">Question Text</label>
                   <input
                     type="text"
                     value={q.question}
                     onChange={(e) => updateQuestion(qIndex, 'question', e.target.value)}
-                    placeholder="Enter your question..."
+                    placeholder="What is the correct answer to..."
                     className="input"
                     required
                   />
+                  <p className="label-hint">{q.question.length}/500 characters</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Options *
-                  </label>
-                  <div className="space-y-2">
+                  <label className="label mb-4">Answer Options</label>
+                  <div className="space-y-3">
                     {q.options.map((option, oIndex) => (
-                      <div key={oIndex} className="flex items-center gap-2">
+                      <div key={oIndex} className="flex items-center gap-3">
                         <input
                           type="radio"
+                          id={`correct-${qIndex}-${oIndex}`}
                           name={`correct-${qIndex}`}
                           checked={q.correctAnswer === option}
                           onChange={() => updateQuestion(qIndex, 'correctAnswer', option)}
-                          className="w-4 h-4 text-primary-600"
+                          className="w-4 h-4 accent-[--accent-color]"
                         />
                         <input
                           type="text"
                           value={option}
                           onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
-                          placeholder={`Option ${oIndex + 1}`}
+                          placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
                           className="input flex-1"
                           required
                         />
-                        <span className="text-xs text-gray-500 w-20">
-                          {q.correctAnswer === option ? 'Correct' : ''}
-                        </span>
+                        {q.correctAnswer === option && (
+                          <span className="text-xs font-medium text-[--success-color] whitespace-nowrap">
+                            ✓ Correct
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Select the correct answer by clicking the radio button
-                  </p>
+                  <p className="label-hint">Select the correct answer with the radio button</p>
                 </div>
               </div>
             </div>
@@ -265,13 +304,11 @@ const CreateQuiz = () => {
         </div>
 
         {/* Actions */}
-        <div className="card bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">
-                Quiz will be saved locally and synced automatically when online
-              </p>
-            </div>
+        <div className="card bg-[--bg-tertiary]">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-sm text-[--text-secondary]">
+              Saved offline and synced when you connect to the internet
+            </p>
             <div className="flex gap-3">
               <button
                 type="button"
@@ -283,9 +320,9 @@ const CreateQuiz = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-primary disabled:opacity-50"
+                className="btn btn-primary"
               >
-                {loading ? 'Creating...' : '✨ Create Quiz'}
+                {loading ? 'Creating...' : 'Create Quiz'}
               </button>
             </div>
           </div>

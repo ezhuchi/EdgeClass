@@ -15,6 +15,7 @@ export const createQuiz = async (quizData) => {
     id: `quiz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     title: quizData.title,
     description: quizData.description || '',
+    timeLimit: quizData.timeLimit || 30, // Time limit in minutes
     createdBy: user.id,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
