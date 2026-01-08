@@ -1,4 +1,7 @@
 <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <circle cx="100" cy="100" r="90" fill="#6366f1" opacity="0.1"/>
-  <text x="100" y="130" font-size="100" text-anchor="middle" fill="#6366f1">👻</text>
+  <path d="M100 40C77.909 40 60 57.909 60 80v60c0 4.418 3.582 8 8 8h64c4.418 0 8-3.582 8-8V80c0-22.091-17.909-40-40-40z" fill="#6366f1" opacity="0.3"/>
+  <circle cx="85" cy="90" r="8" fill="#6366f1"/>
+  <circle cx="115" cy="90" r="8" fill="#6366f1"/>
+  <path d="M85 115c0-8.284 6.716-15 15-15s15 6.716 15 15" stroke="#6366f1" stroke-width="4" fill="none" stroke-linecap="round"/>
 </svg>

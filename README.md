@@ -57,6 +57,10 @@ Server (Backup & Sync Endpoint)
 └─ Rate Limiting - API protection
 ```
 
+**Architecture Diagram:**
+
+![EdgeClass Architecture](architecture.png)
+
 **Data Flow:**
 1. User creates/submits data → Saved to **IndexedDB immediately**
 2. Action queued in **syncQueue** table
