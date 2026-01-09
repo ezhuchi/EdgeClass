@@ -1,5 +1,6 @@
 import express from 'express';
 import { getDB } from '../db/init.js';
+import { authenticateToken, authorizeRole, generateToken } from '../middleware/auth.js';
 import { 
   validateBody, 
   userSchema, 
@@ -10,8 +11,43 @@ import {
 
 const router = express.Router();
 
-// Sync users
-router.post('/users', validateBody(userSchema), (req, res) => {
+// Login endpoint - no auth required, returns JWT token
+router.post('/login', validateBody(userSchema), (req, res) => {
+  try {
+    const { id, username, role, deviceId, createdAt } = req.validatedBody;
+    const db = getDB();
+
+    // Create or update user
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO users (id, username, role, deviceId, createdAt, syncedAt)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `);
+
+    stmt.run(id, username, role, deviceId, createdAt);
+
+    // Generate JWT token
+    const token = generateToken(id, username, role, deviceId);
+
+    // Log sync
+    logSync(db, deviceId, 'user', id, 'login');
+
+    res.json({ 
+      success: true, 
+      token,
+      user: { id, username, role, deviceId },
+      message: 'Login successful' 
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Login failed' 
+    });
+  }
+});
+
+// Sync users - requires authentication
+router.post('/users', authenticateToken, validateBody(userSchema), (req, res) => {
   try {
     const { id, username, role, deviceId, createdAt } = req.validatedBody;
     const db = getDB();
@@ -35,23 +71,22 @@ router.post('/users', validateBody(userSchema), (req, res) => {
     console.error('Error syncing user:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to sync user' 
     });
   }
 });
 
-// Sync quizzes
-router.post('/quizzes', validateBody(quizSchema), (req, res) => {
+// Sync quizzes - requires authentication, only teachers can create
+router.post('/quizzes', authenticateToken, authorizeRole('teacher'), validateBody(quizSchema), (req, res) => {
   try {
     const { id, title, description, createdBy, createdAt, updatedAt, deviceId } = req.validatedBody;
     const db = getDB();
 
-    // Role-based validation: Only teachers can create quizzes
-    const creator = db.prepare('SELECT role FROM users WHERE id = ?').get(createdBy);
-    if (creator && creator.role !== 'teacher') {
+    // Verify the authenticated user is creating their own quiz
+    if (req.user.userId !== createdBy) {
       return res.status(403).json({
         success: false,
-        error: 'Only teachers can create quizzes'
+        error: 'You can only create quizzes for yourself'
       });
     }
 
@@ -93,13 +128,13 @@ router.post('/quizzes', validateBody(quizSchema), (req, res) => {
     console.error('Error syncing quiz:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to sync quiz' 
     });
   }
 });
 
-// Sync questions
-router.post('/questions', validateBody(questionsBatchSchema), (req, res) => {
+// Sync questions - requires authentication, only teachers
+router.post('/questions', authenticateToken, authorizeRole('teacher'), validateBody(questionsBatchSchema), (req, res) => {
   try {
     const { questions, deviceId } = req.validatedBody;
     const db = getDB();
@@ -135,16 +170,43 @@ router.post('/questions', validateBody(questionsBatchSchema), (req, res) => {
     console.error('Error syncing questions:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to sync questions' 
     });
   }
 });
 
-// Sync attempts
-router.post('/attempts', validateBody(attemptSchema), (req, res) => {
+// Sync attempts - requires authentication
+router.post('/attempts', authenticateToken, validateBody(attemptSchema), (req, res) => {
   try {
-    const { id, quizId, userId, answers, score, totalQuestions, completedAt, deviceId } = req.validatedBody;
+    const { id, quizId, userId, answers, totalQuestions, completedAt, deviceId } = req.validatedBody;
     const db = getDB();
+
+    // Verify the authenticated user is submitting their own attempt
+    if (req.user.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only submit your own quiz attempts'
+      });
+    }
+
+    // SECURITY: Calculate score server-side to prevent tampering
+    const questions = db.prepare('SELECT correctAnswer FROM questions WHERE quizId = ? ORDER BY `order` ASC').all(quizId);
+    
+    if (questions.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quiz not found or has no questions'
+      });
+    }
+
+    const answersArray = JSON.parse(answers);
+    let score = 0;
+    
+    questions.forEach((q, index) => {
+      if (answersArray[index] === q.correctAnswer) {
+        score++;
+      }
+    });
 
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO attempts (id, quizId, userId, answers, score, totalQuestions, completedAt, deviceId, syncedAt)
@@ -165,16 +227,34 @@ router.post('/attempts', validateBody(attemptSchema), (req, res) => {
     console.error('Error syncing attempt:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to sync attempt' 
     });
   }
 });
 
-// Delete quiz
-router.delete('/quizzes/:id', (req, res) => {
+// Delete quiz - requires authentication, only teachers or quiz creator
+router.delete('/quizzes/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const db = getDB();
+
+    // Check if quiz exists and get creator
+    const quiz = db.prepare('SELECT createdBy FROM quizzes WHERE id = ?').get(id);
+    
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quiz not found'
+      });
+    }
+
+    // Only the quiz creator or teachers can delete
+    if (req.user.role !== 'teacher' && req.user.userId !== quiz.createdBy) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only delete your own quizzes'
+      });
+    }
 
     const stmt = db.prepare('DELETE FROM quizzes WHERE id = ?');
     const result = stmt.run(id);
@@ -188,32 +268,40 @@ router.delete('/quizzes/:id', (req, res) => {
     console.error('Error deleting quiz:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to delete quiz' 
     });
   }
 });
 
-// Get all quizzes (for debugging)
-router.get('/quizzes', (req, res) => {
+// Get all quizzes - requires authentication
+router.get('/quizzes', authenticateToken, (req, res) => {
   try {
     const db = getDB();
     const quizzes = db.prepare('SELECT * FROM quizzes ORDER BY createdAt DESC').all();
     res.json({ success: true, quizzes });
   } catch (error) {
     console.error('Error fetching quizzes:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Failed to fetch quizzes' });
   }
 });
 
-// Get all attempts (for debugging)
-router.get('/attempts', (req, res) => {
+// Get all attempts - requires authentication
+router.get('/attempts', authenticateToken, (req, res) => {
   try {
     const db = getDB();
-    const attempts = db.prepare('SELECT * FROM attempts ORDER BY completedAt DESC').all();
+    
+    // Students can only see their own attempts, teachers see all
+    let attempts;
+    if (req.user.role === 'teacher') {
+      attempts = db.prepare('SELECT * FROM attempts ORDER BY completedAt DESC').all();
+    } else {
+      attempts = db.prepare('SELECT * FROM attempts WHERE userId = ? ORDER BY completedAt DESC').all(req.user.userId);
+    }
+    
     res.json({ success: true, attempts });
   } catch (error) {
     console.error('Error fetching attempts:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Failed to fetch attempts' });
   }
 });
 
