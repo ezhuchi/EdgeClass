@@ -42,8 +42,8 @@ app.use((req, res, next) => {
   // Referrer Policy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // Permissions Policy
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // Permissions Policy - Allow camera/microphone for same origin, block geolocation
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
   
   // HSTS for HTTPS
   if (isProduction) {
@@ -53,9 +53,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware
+// Middleware - CORS only (json parsing comes after rate limiting)
 app.use(cors());
-app.use(express.json());
 
 // Rate limiting for sync endpoints (100 requests per 15 minutes)
 const syncLimiter = rateLimit({
@@ -72,6 +71,13 @@ const apiLimiter = rateLimit({
   max: 200,
   message: 'Too many requests, please try again later',
 });
+
+// JSON body parser with strict size limits (AFTER rate limiters)
+// Limits prevent JSON DoS attacks via massive payloads or deeply nested objects
+app.use(express.json({ 
+  limit: '100kb', // Maximum request body size
+  strict: true,   // Only accept arrays and objects
+}));
 
 // Request logging
 app.use((req, res, next) => {
@@ -104,13 +110,24 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Error handler - Sanitized to prevent information leakage
 app.use((err, req, res, next) => {
+  // Log full error details server-side for debugging
   console.error('Error:', err);
-  res.status(500).json({ 
-    error: 'Internal server error',
-    message: err.message 
-  });
+  
+  // Send sanitized error to client (never expose stack traces, file paths, or DB errors)
+  const statusCode = err.statusCode || 500;
+  const response = {
+    success: false,
+    error: statusCode === 500 ? 'Internal server error' : err.message
+  };
+  
+  // In development, optionally include more details (but still not full stack)
+  if (process.env.NODE_ENV !== 'production' && err.code) {
+    response.code = err.code;
+  }
+  
+  res.status(statusCode).json(response);
 });
 
 app.listen(PORT, '0.0.0.0', () => {

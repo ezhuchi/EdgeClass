@@ -1,10 +1,11 @@
 import express from 'express';
 import { getDB } from '../db/init.js';
+import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get overall statistics
-router.get('/', (req, res) => {
+// Get overall statistics - requires teacher authentication
+router.get('/', authenticateToken, authorizeRole('teacher'), (req, res) => {
   try {
     const db = getDB();
 
@@ -30,16 +31,24 @@ router.get('/', (req, res) => {
     console.error('Error fetching stats:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to fetch statistics' 
     });
   }
 });
 
-// Get device-specific statistics
-router.get('/device/:deviceId', (req, res) => {
+// Get device-specific statistics - requires authentication
+router.get('/device/:deviceId', authenticateToken, (req, res) => {
   try {
     const { deviceId } = req.params;
     const db = getDB();
+
+    // Users can only view their own device stats unless they're teachers
+    if (req.user.role !== 'teacher' && req.user.deviceId !== deviceId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only view your own device statistics'
+      });
+    }
 
     const stats = {
       quizzes: db.prepare('SELECT COUNT(*) as count FROM quizzes WHERE deviceId = ?').get(deviceId),
@@ -68,7 +77,7 @@ router.get('/device/:deviceId', (req, res) => {
     console.error('Error fetching device stats:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to fetch device statistics' 
     });
   }
 });
